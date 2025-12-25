@@ -16,9 +16,10 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <style>
-        body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
+        body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
         .container { width: 100%; max-width: 430px; min-height: 100vh; height: auto; background: linear-gradient(180deg, #1a1a1a 0%, #000000 30%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px 40px 20px; box-sizing: border-box; }
-        .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
+        /* header 높이 고정 */
+        .header { width: 100%; height: 60px; display: flex; align-items: center; margin-top: 10px; flex-shrink: 0; }
         .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; }
         .back-btn img { width: 48px; height: 48px; display: block; }
         .page-title { margin-top: 10px; margin-bottom: 20px; }
@@ -46,7 +47,6 @@
         .notice-list { margin: 0; padding-left: 20px; line-height: 1.6; }
         .notice-list li { margin-bottom: 4px; }
 
-        /* [추가] 이미지 결과 팝업 스타일 (네이버 앱 대응용) */
         #resultModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         #resultModal img { max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 0 20px rgba(255,225,115,0.3); }
         #resultModal p { color: #FFE173; font-size: 18px; font-weight: 700; margin-top: 20px; text-align: center; }
@@ -55,8 +55,8 @@
 </head>
 <body>
     <div class="container" id="captureArea">
-        <div class="header">
-            <button class="back-btn" onclick="location.href='index.html'" data-html2canvas-ignore="true">
+        <div class="header" data-html2canvas-ignore="true">
+            <button class="back-btn" onclick="location.href='index.html'">
                 <img src="arrow-left.svg" alt="Back">
             </button>
         </div>
@@ -74,7 +74,7 @@
             <p class="artist-name" id="artistName"></p>
         </div>
 
-        <div class="reason-box">
+        <div class="reason-box" id="lastCaptureElement">
             <p class="reason-text" id="reasonText"></p>
         </div>
 
@@ -116,8 +116,6 @@
         const sharedImgUrl = urlParams.get('img'); 
 
         const isKorean = navigator.language.includes('ko');
-
-        // [중요] 네이버/카카오 앱 감지
         const userAgent = navigator.userAgent.toLowerCase();
         const isInApp = userAgent.includes('naver') || userAgent.includes('kakao');
 
@@ -130,7 +128,7 @@
                 retry: "다시하기",
                 noticeTitle: "유의사항",
                 notice1: "본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.",
-                notice2: "제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.",
+                notice2: "제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.</li>",
                 notice3: "추천된 노래와 앨범 커버 이미지는 정보를 식별하기 위한 최소한의 보조 자료로만 활용됩니다.",
                 notice4: "추천 사유 및 해석은 AI가 생성한 주관적인 내용이며, 정확성이나 법적 효력을 보장하지 않습니다.",
                 alertCopy: "링크가 복사되었습니다.",
@@ -171,7 +169,6 @@
                 <li>${lang.notice4}</li>
             `;
 
-            // 모바일이거나 인앱 브라우저면 버튼 통합
             if (navigator.share || isInApp) {
                 document.getElementById('btnCopy').style.display = 'none';
                 document.getElementById('btnSave').innerText = lang.share;
@@ -188,12 +185,9 @@
             document.getElementById('reasonText').innerHTML = `"${sharedWish}"<br>${sharedReason}`;
 
             const imgElement = document.getElementById('albumImg');
-            
             if (sharedImgUrl) {
-                // [이미지 개선] 더 안정적인 Full 주소 사용 + 캐시 방지
                 const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(sharedImgUrl)}&output=jpg&n=-1`;
                 imgElement.src = proxyUrl;
-                
                 imgElement.onerror = function() {
                     console.log("프록시 실패 -> 원본 로드");
                     this.removeAttribute('crossorigin'); 
@@ -224,18 +218,33 @@
             }
 
             const captureElement = document.getElementById('captureArea');
+            const lastElement = document.getElementById('lastCaptureElement');
+
+            // [임시 스타일 적용] 캡처를 위해 스타일 변경
+            const originalPadding = captureElement.style.padding;
+            const originalMinHeight = captureElement.style.minHeight;
+            const originalMarginBottom = lastElement.style.marginBottom;
+
+            // [수정됨] 상하단에 40px 여백 추가
+            captureElement.style.padding = '40px 20px 40px 20px'; 
+            captureElement.style.minHeight = 'auto';
+            lastElement.style.marginBottom = '0'; 
+
             document.body.style.cursor = 'wait';
             window.scrollTo(0, 0);
-            const fullHeight = captureElement.scrollHeight;
 
             try {
                 const canvas = await html2canvas(captureElement, {
-                    useCORS: true, allowTaint: false, backgroundColor: "#1a1a1a", scale: 2,
-                    height: fullHeight, windowHeight: fullHeight, scrollX: 0, scrollY: 0, x: 0, y: 0
+                    useCORS: true, allowTaint: false, 
+                    backgroundColor: null, 
+                    scale: 2, scrollX: 0, scrollY: 0, x: 0, y: 0
                 });
 
-                // [네이버/카카오 앱 대응] 
-                // 인앱 브라우저는 navigator.share가 자주 고장나므로, 무조건 팝업 띄움
+                // [스타일 복구]
+                captureElement.style.padding = originalPadding;
+                captureElement.style.minHeight = originalMinHeight;
+                lastElement.style.marginBottom = originalMarginBottom;
+
                 if (isInApp) {
                     const imgData = canvas.toDataURL('image/png');
                     document.getElementById('generatedImage').src = imgData;
@@ -244,7 +253,6 @@
                     return; 
                 }
 
-                // 일반 모바일 (사파리, 크롬)
                 canvas.toBlob(async (blob) => {
                     if (!blob) throw new Error("Blob creation failed");
                     const file = new File([blob], "2026_NewYear_Song.png", { type: "image/png" });
@@ -252,17 +260,13 @@
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
                             await navigator.share({
-                                files: [file],
-                                title: lang.title,
-                                text: sharedTitle + " - " + sharedArtist + "\n#2026새해첫곡"
+                                files: [file], title: lang.title, text: sharedTitle + " - " + sharedArtist + "\n#2026새해첫곡"
                             });
                             document.body.style.cursor = 'default';
                         } catch (shareError) {
-                            // 사용자가 취소한 경우 조용히 넘어감
                             document.body.style.cursor = 'default';
                         }
                     } else {
-                        // PC 다운로드
                         const link = document.createElement('a');
                         link.download = '2026_NewYear_Song.png';
                         link.href = canvas.toDataURL('image/png');
@@ -275,9 +279,13 @@
                 }, 'image/png');
 
             } catch (err) {
+                // 에러 발생 시에도 스타일 복구
+                captureElement.style.padding = originalPadding;
+                captureElement.style.minHeight = originalMinHeight;
+                lastElement.style.marginBottom = originalMarginBottom;
+                
                 document.body.style.cursor = 'default';
                 console.error("Capture Error:", err);
-                // 캡처 실패 시 (이미지 로딩 문제 등) 
                 alert(lang.alertError + "\n(이미지 로딩이 완료된 후 다시 시도해주세요)");
             }
         }
