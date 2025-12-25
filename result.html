@@ -18,14 +18,16 @@
     <style>
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
         .container { width: 100%; max-width: 430px; min-height: 100vh; height: auto; background: linear-gradient(180deg, #1a1a1a 0%, #000000 30%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px 40px 20px; box-sizing: border-box; }
-        /* header 높이 고정 */
         .header { width: 100%; height: 60px; display: flex; align-items: center; margin-top: 10px; flex-shrink: 0; }
         .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; }
         .back-btn img { width: 48px; height: 48px; display: block; }
         .page-title { margin-top: 10px; margin-bottom: 20px; }
         .page-title h2 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; white-space: nowrap; }
+        
+        /* 앨범 커버 스타일 */
         .album-cover { width: 100%; height: 0; padding-bottom: 100%; position: relative; background-color: #333; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
         .album-cover img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+        
         .song-info { margin-bottom: 20px; }
         .song-title { font-size: 20px; font-weight: 800; margin: 0 0 5px 0; }
         .artist-name { font-size: 16px; color: #aaaaaa; margin: 0; font-weight: 400; }
@@ -47,6 +49,7 @@
         .notice-list { margin: 0; padding-left: 20px; line-height: 1.6; }
         .notice-list li { margin-bottom: 4px; }
 
+        /* 결과 팝업 (네이버 앱 대응) */
         #resultModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         #resultModal img { max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 0 20px rgba(255,225,115,0.3); }
         #resultModal p { color: #FFE173; font-size: 18px; font-weight: 700; margin-top: 20px; text-align: center; }
@@ -66,7 +69,7 @@
         </div>
 
         <div class="album-cover">
-            <img id="albumImg" src="" alt="Album Cover" crossorigin="anonymous" referrerpolicy="no-referrer">
+            <img id="albumImg" src="https://via.placeholder.com/600x600/333333/FFFFFF?text=Loading..." alt="Album Cover" crossorigin="anonymous" referrerpolicy="no-referrer">
         </div>
 
         <div class="song-info">
@@ -117,7 +120,8 @@
 
         const isKorean = navigator.language.includes('ko');
         const userAgent = navigator.userAgent.toLowerCase();
-        const isInApp = userAgent.includes('naver') || userAgent.includes('kakao');
+        // 인앱 브라우저 체크
+        const isInApp = userAgent.includes('naver') || userAgent.includes('kakao') || userAgent.includes('instagram');
 
         const i18n = {
             ko: {
@@ -128,7 +132,7 @@
                 retry: "다시하기",
                 noticeTitle: "유의사항",
                 notice1: "본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.",
-                notice2: "제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.</li>",
+                notice2: "제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.",
                 notice3: "추천된 노래와 앨범 커버 이미지는 정보를 식별하기 위한 최소한의 보조 자료로만 활용됩니다.",
                 notice4: "추천 사유 및 해석은 AI가 생성한 주관적인 내용이며, 정확성이나 법적 효력을 보장하지 않습니다.",
                 alertCopy: "링크가 복사되었습니다.",
@@ -169,6 +173,7 @@
                 <li>${lang.notice4}</li>
             `;
 
+            // 모바일 환경이거나 인앱 브라우저면 버튼 통합
             if (navigator.share || isInApp) {
                 document.getElementById('btnCopy').style.display = 'none';
                 document.getElementById('btnSave').innerText = lang.share;
@@ -185,17 +190,27 @@
             document.getElementById('reasonText').innerHTML = `"${sharedWish}"<br>${sharedReason}`;
 
             const imgElement = document.getElementById('albumImg');
-            if (sharedImgUrl) {
-                const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(sharedImgUrl)}&output=jpg&n=-1`;
+            // 기본 LP판 이미지 (애플뮤직 이미지 없을 때 대비)
+            const defaultLP = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=600&auto=format&fit=crop";
+
+            if (sharedImgUrl && sharedImgUrl !== "") {
+                // 1. 프록시 시도
+                const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(sharedImgUrl)}&output=jpg`;
                 imgElement.src = proxyUrl;
+                
+                // 2. 실패 시 원본 시도
                 imgElement.onerror = function() {
                     console.log("프록시 실패 -> 원본 로드");
-                    this.removeAttribute('crossorigin'); 
+                    this.removeAttribute('crossorigin'); // CORS 해제 (눈에 보이게 하기 위함)
                     this.src = sharedImgUrl; 
-                    this.onerror = null; 
+                    
+                    // 3. 원본도 실패하면 LP판 이미지
+                    this.onerror = function() {
+                        this.src = defaultLP;
+                    }
                 };
             } else {
-                imgElement.src = "https://via.placeholder.com/600x600/333333/FFFFFF?text=No+Image";
+                imgElement.src = defaultLP;
             }
         };
 
@@ -220,12 +235,11 @@
             const captureElement = document.getElementById('captureArea');
             const lastElement = document.getElementById('lastCaptureElement');
 
-            // [임시 스타일 적용] 캡처를 위해 스타일 변경
+            // 캡처 스타일 임시 변경
             const originalPadding = captureElement.style.padding;
             const originalMinHeight = captureElement.style.minHeight;
             const originalMarginBottom = lastElement.style.marginBottom;
 
-            // [수정됨] 상하단에 40px 여백 추가
             captureElement.style.padding = '40px 20px 40px 20px'; 
             captureElement.style.minHeight = 'auto';
             lastElement.style.marginBottom = '0'; 
@@ -234,17 +248,40 @@
             window.scrollTo(0, 0);
 
             try {
+                // [고급 기능] 이미지가 '원본 URL'로 로드되어 CORS 문제가 발생할 경우를 대비해
+                // 이미지를 강제로 Fetch해서 덮어씌운 뒤 캡처함
+                const imgElement = document.getElementById('albumImg');
+                const currentSrc = imgElement.src;
+                
+                // 만약 프록시가 아닌 원본 주소라면 (crossorigin이 없으면)
+                if (!imgElement.getAttribute('crossorigin')) {
+                    try {
+                        const response = await fetch(currentSrc);
+                        const blob = await response.blob();
+                        const objectUrl = URL.createObjectURL(blob);
+                        imgElement.src = objectUrl; // Blob URL로 잠시 교체
+                    } catch (e) {
+                        console.log("이미지 Fetch 실패, 그냥 진행");
+                    }
+                }
+
+                // 캔버스 생성
                 const canvas = await html2canvas(captureElement, {
-                    useCORS: true, allowTaint: false, 
-                    backgroundColor: null, 
-                    scale: 2, scrollX: 0, scrollY: 0, x: 0, y: 0
+                    useCORS: true, allowTaint: true, // Taint 허용
+                    backgroundColor: null, scale: 2, scrollX: 0, scrollY: 0, x: 0, y: 0
                 });
 
-                // [스타일 복구]
+                // 스타일 복구
                 captureElement.style.padding = originalPadding;
                 captureElement.style.minHeight = originalMinHeight;
                 lastElement.style.marginBottom = originalMarginBottom;
+                
+                // 이미지 URL 복구 (만약 바꿨다면)
+                if (imgElement.src.startsWith('blob:')) {
+                    imgElement.src = currentSrc;
+                }
 
+                // [네이버/카카오/인스타 등 인앱 브라우저] -> 팝업 띄우기 (가장 확실)
                 if (isInApp) {
                     const imgData = canvas.toDataURL('image/png');
                     document.getElementById('generatedImage').src = imgData;
@@ -253,6 +290,7 @@
                     return; 
                 }
 
+                // [일반 브라우저]
                 canvas.toBlob(async (blob) => {
                     if (!blob) throw new Error("Blob creation failed");
                     const file = new File([blob], "2026_NewYear_Song.png", { type: "image/png" });
@@ -279,14 +317,17 @@
                 }, 'image/png');
 
             } catch (err) {
-                // 에러 발생 시에도 스타일 복구
+                // 에러 발생 시 스타일 복구
                 captureElement.style.padding = originalPadding;
                 captureElement.style.minHeight = originalMinHeight;
                 lastElement.style.marginBottom = originalMarginBottom;
                 
                 document.body.style.cursor = 'default';
                 console.error("Capture Error:", err);
-                alert(lang.alertError + "\n(이미지 로딩이 완료된 후 다시 시도해주세요)");
+                // 모바일에서 간혹 공유 취소 시 에러로 잡힐 수 있음
+                if (err.name !== 'AbortError') {
+                    alert(lang.alertError);
+                }
             }
         }
     </script>
