@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyzing...</title>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-J0W132F99N');
+    </script>
+    
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.11/dist/dotlottie-wc.js" type="module"></script>
+    
+    <style>
+        body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow: hidden; }
+        .container { width: 100%; max-width: 430px; height: 100%; background: linear-gradient(180deg, #1a1a1a 0%, #000000 30%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px; box-sizing: border-box; }
+        .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
+        .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; display: flex; align-items: center; }
+        .back-btn img { width: 48px; height: 48px; display: block; }
+        .title-area { margin-top: 10px; margin-bottom: 0; }
+        h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; white-space: nowrap; }
+        .lottie-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding-bottom: 100px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="history.back()">
+                <img src="arrow-left.svg" alt="Back">
+            </button>
+        </div>
+        <div class="title-area">
+            <h2 id="loadingTitle">새해 소원 분석 중...</h2>
+        </div>
+        <div class="lottie-wrapper">
+            <dotlottie-wc src="https://lottie.host/0eb64900-9ece-4d58-951f-684a16c1e285/HPQMTQlKxY.lottie" style="width: 300px; height: 300px;" autoplay loop></dotlottie-wc>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "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";
+        const userKeyword = localStorage.getItem('userKeyword') || "Hope"; 
+        const userWish = localStorage.getItem('userWish') || "Happy New Year";
+
+        // [언어 감지] 한국어(ko) 포함 여부 확인
+        const isKorean = navigator.language.includes('ko');
+
+        window.onload = function() {
+            // 화면 텍스트 언어 설정
+            const titleElement = document.getElementById('loadingTitle');
+            if (!isKorean) {
+                titleElement.innerText = "Analyzing your wish...";
+                document.title = "Analyzing - 2026 First Song";
+            }
+            fetchAIRecommendation();
+        };
+
+        async function fetchAIRecommendation() {
+            // GA4 이벤트 전송
+            if (typeof gtag === 'function') {
+                gtag('event', 'ai_request', {
+                    'search_term': userKeyword,
+                    'user_wish': userWish,
+                    'language': isKorean ? 'ko' : 'en'
+                });
+            }
+
+            // [AI 프롬프트 분기]
+            let systemInstruction = "";
+            
+            if (isKorean) {
+                // 한국어 프롬프트
+                systemInstruction = `
+                    [필수 규칙]
+                    1. 사용자의 소원(${userWish})과 가장 잘 어울리는 K-POP을 추천해줘.
+                    2. 특정 아이돌에 국한되지 말고 다양한 장르를 고려해줘.
+                    3. 리메이크 곡이라면 '가장 최신 리메이크 버전'으로 추천해줘.
+                    4. 응답은 오직 JSON만: {"title": "제목", "artist": "가수", "reason": "이유"}
+                    5. 'reason' 작성 가이드: 따뜻한 해요체, 3문장 이내, 마지막은 무조건 '허허'로 끝내기.
+                `;
+            } else {
+                // 영어 프롬프트 (Global)
+                // [수정] 끝맺음을 'huh huh'로 변경
+                systemInstruction = `
+                    [Rules]
+                    1. Recommend a K-POP song that best matches the user's wish: "${userWish}".
+                    2. Consider various artists and genres (90s to latest).
+                    3. If it's a remake, recommend the 'latest remake version'.
+                    4. Response MUST be JSON only: {"title": "Song Title", "artist": "Artist Name", "reason": "Reason in English"}
+                    5. 'reason' writing guide:
+                       - Warm and supportive tone like a friend.
+                       - Within 3 sentences.
+                       - **MUST end the sentence with 'huh huh'.** (e.g., I'll cheer for you. huh huh)
+                       - Write the reason in English.
+                `;
+            }
+
+            try {
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${API_KEY}` },
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini", 
+                        messages: [{ role: "user", content: systemInstruction }],
+                        temperature: 1.0 
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
+                
+                let aiContent = data.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim();
+                const result = JSON.parse(aiContent);
+                const coverUrl = await searchAlbumCover(result.title, result.artist);
+
+                goResultPage(result.title, result.artist, result.reason, coverUrl);
+
+            } catch (error) {
+                console.error(error);
+                alert(isKorean ? "다시 시도해주세요." : "Please try again.");
+                location.href = 'index.html';
+            }
+        }
+
+        async function searchAlbumCover(title, artist) {
+            try {
+                const query = encodeURIComponent(`${artist} ${title}`);
+                const response = await fetch(`https://itunes.apple.com/search?term=${query}&media=music&entity=song&limit=1`);
+                const data = await response.json();
+                if (data.resultCount > 0) return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+                return ""; 
+            } catch { return ""; }
+        }
+
+        function goResultPage(title, artist, reason, coverUrl) {
+            const params = new URLSearchParams({ t: title, a: artist, r: reason, w: userWish, img: coverUrl });
+            location.replace(`result.html?${params.toString()}`);
+        }
+    </script>
+</body>
+</html>

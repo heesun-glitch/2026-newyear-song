@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 First Song</title>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-J0W132F99N');
+    </script>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <style>
+        body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
+        .container { width: 100%; max-width: 430px; min-height: 100vh; height: auto; background: linear-gradient(180deg, #1a1a1a 0%, #000000 30%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px 40px 20px; box-sizing: border-box; }
+        .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
+        .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; }
+        .back-btn img { width: 48px; height: 48px; display: block; }
+        .page-title { margin-top: 10px; margin-bottom: 20px; }
+        .page-title h2 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; white-space: nowrap; }
+        .album-cover { width: 100%; height: 0; padding-bottom: 100%; position: relative; background-color: #333; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .album-cover img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+        .song-info { margin-bottom: 20px; }
+        .song-title { font-size: 20px; font-weight: 800; margin: 0 0 5px 0; }
+        .artist-name { font-size: 16px; color: #aaaaaa; margin: 0; font-weight: 400; }
+        .reason-box { width: 100%; background-color: #282828; border-radius: 12px; padding: 20px; box-sizing: border-box; margin-bottom: 30px; }
+        .reason-text { font-size: 14px; line-height: 1.6; color: #dddddd; margin: 0; }
+        .btn-group { display: flex; gap: 10px; width: 100%; margin-bottom: 20px; }
+        .action-btn { flex: 1; padding: 16px 0; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); }
+        .action-btn:active { transform: scale(0.98); }
+        .btn-copy { background-color: #F5F5F5; color: #000000; }
+        .btn-save { background-color: #FFE173; color: #000000; }
+        .retry-area { text-align: center; padding-bottom: 0; }
+        .retry-link { color: #555555; text-decoration: underline; font-size: 16px; cursor: pointer; }
+        .notice-area { margin-top: 32px; padding-bottom: 40px; color: #555555; font-size: 14px; text-align: left; }
+        .notice-header { display: flex; align-items: center; margin-bottom: 8px; }
+        .notice-header img { width: 18px; height: 18px; margin-right: 4px; }
+        .notice-header span { font-weight: 700; }
+        .notice-list { margin: 0; padding-left: 20px; line-height: 1.6; }
+        .notice-list li { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container" id="captureArea">
+        <div class="header">
+            <button class="back-btn" onclick="location.href='index.html'" data-html2canvas-ignore="true">
+                <img src="arrow-left.svg" alt="Back">
+            </button>
+        </div>
+
+        <div class="page-title">
+            <h2 id="pageTitleText">2026년 나만의 새해 첫 곡</h2>
+        </div>
+
+        <div class="album-cover">
+            <img id="albumImg" src="https://via.placeholder.com/600x600/333333/FFFFFF?text=Loading..." alt="Album Cover" crossorigin="anonymous">
+        </div>
+
+        <div class="song-info">
+            <h3 class="song-title" id="songTitle"></h3>
+            <p class="artist-name" id="artistName"></p>
+        </div>
+
+        <div class="reason-box">
+            <p class="reason-text" id="reasonText"></p>
+        </div>
+
+        <div class="btn-group" data-html2canvas-ignore="true">
+            <button class="action-btn btn-copy" id="btnCopy" onclick="copyLink()">링크 복사하기</button>
+            <button class="action-btn btn-save" id="btnSave" onclick="saveImage()">이미지 저장하기</button>
+        </div>
+
+        <div class="retry-area" data-html2canvas-ignore="true">
+            <a onclick="location.href='index.html'" class="retry-link" id="btnRetry">다시하기</a>
+        </div>
+
+        <div class="notice-area" data-html2canvas-ignore="true">
+            <div class="notice-header">
+                <img src="info.png" alt="info">
+                <span id="noticeTitle">유의사항</span>
+            </div>
+            <ul class="notice-list" id="noticeList">
+                <li>본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.</li>
+                <li>제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.</li>
+                <li>추천된 노래와 앨범 커버 이미지는 정보를 식별하기 위한 최소한의 보조 자료로만 활용됩니다.</li>
+                <li>본 서비스가 제공하는 추천 사유 및 해석은 인공지능(AI)이 사용자의 입력값을 바탕으로 생성된 주관적인 내용입니다.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedTitle = urlParams.get('t'); 
+        const sharedArtist = urlParams.get('a'); 
+        const sharedReason = urlParams.get('r'); 
+        const sharedWish = urlParams.get('w'); 
+        const sharedImgUrl = urlParams.get('img'); 
+
+        // [언어 감지]
+        const isKorean = navigator.language.includes('ko');
+
+        // [다국어 텍스트 데이터]
+        const i18n = {
+            ko: {
+                title: "2026년 나만의 새해 첫 곡",
+                copy: "링크 복사하기",
+                save: "이미지 저장하기",
+                retry: "다시하기",
+                noticeTitle: "유의사항",
+                notice1: "본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.",
+                notice2: "제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.",
+                notice3: "추천된 노래와 앨범 커버 이미지는 정보를 식별하기 위한 최소한의 보조 자료로만 활용됩니다.",
+                notice4: "추천 사유 및 해석은 AI가 생성한 주관적인 내용이며, 정확성이나 법적 효력을 보장하지 않습니다.",
+                alertCopy: "링크가 복사되었습니다.",
+                alertSave: "이미지가 저장되었습니다.",
+                alertError: "이미지 저장 중 오류가 발생했습니다."
+            },
+            en: {
+                title: "My 2026 New Year Song",
+                copy: "Copy Link",
+                save: "Save Image",
+                retry: "Try Again",
+                noticeTitle: "Notice",
+                notice1: "This is a non-profit project for fun.",
+                notice2: "Album covers and music data are provided by Apple Music.",
+                notice3: "Recommended songs and images are used only for identification purposes.",
+                notice4: "The interpretation is generated by AI and reflects subjective views based on user input.",
+                alertCopy: "Link copied to clipboard.",
+                alertSave: "Image saved successfully.",
+                alertError: "Error occurred while saving image."
+            }
+        };
+
+        window.onload = function() {
+            // [텍스트 언어 적용]
+            const lang = isKorean ? i18n.ko : i18n.en;
+            
+            document.getElementById('pageTitleText').innerText = lang.title;
+            document.getElementById('btnCopy').innerText = lang.copy;
+            document.getElementById('btnSave').innerText = lang.save;
+            document.getElementById('btnRetry').innerText = lang.retry;
+            document.getElementById('noticeTitle').innerText = lang.noticeTitle;
+            
+            // 유의사항 목록 업데이트
+            const noticeList = document.getElementById('noticeList');
+            noticeList.innerHTML = `
+                <li>${lang.notice1}</li>
+                <li>${lang.notice2}</li>
+                <li>${lang.notice3}</li>
+                <li>${lang.notice4}</li>
+            `;
+
+            // 데이터가 없으면 처음으로
+            if (!sharedTitle || !sharedArtist) {
+                alert(isKorean ? "잘못된 접근입니다." : "Invalid access.");
+                location.href = 'index.html';
+                return;
+            }
+
+            // 텍스트 표시
+            document.getElementById('songTitle').innerText = sharedTitle;
+            document.getElementById('artistName').innerText = sharedArtist;
+            document.getElementById('reasonText').innerHTML = `"${sharedWish}"<br>${sharedReason}`;
+
+            // 이미지 처리
+            const imgElement = document.getElementById('albumImg');
+            if (sharedImgUrl) {
+                imgElement.src = `https://wsrv.nl/?url=${encodeURIComponent(sharedImgUrl)}&output=jpg`;
+            } else {
+                imgElement.src = "https://via.placeholder.com/600x600/333333/FFFFFF?text=No+Image";
+            }
+        };
+
+        function copyLink() {
+            const lang = isKorean ? i18n.ko : i18n.en;
+            if (typeof gtag === 'function') {
+                gtag('event', 'click_share', { 'song_title': document.getElementById('songTitle').innerText });
+            }
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert(lang.alertCopy);
+            }).catch(err => {
+                alert("Copy failed: " + err);
+            });
+        }
+
+        function saveImage() {
+            const lang = isKorean ? i18n.ko : i18n.en;
+            if (typeof gtag === 'function') {
+                gtag('event', 'click_save', { 'song_title': document.getElementById('songTitle').innerText });
+            }
+
+            const captureElement = document.getElementById('captureArea');
+            document.body.style.cursor = 'wait';
+            window.scrollTo(0, 0);
+            const fullHeight = captureElement.scrollHeight;
+
+            html2canvas(captureElement, {
+                useCORS: true, allowTaint: false, backgroundColor: "#1a1a1a", scale: 2,
+                height: fullHeight, windowHeight: fullHeight, scrollX: 0, scrollY: 0, x: 0, y: 0
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = '2026_NewYear_Song.png'; // 파일명 영어로 통일 (호환성 위해)
+                link.href = canvas.toDataURL('image/png'); 
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                document.body.style.cursor = 'default';
+                alert(lang.alertSave);
+            }).catch(err => {
+                document.body.style.cursor = 'default';
+                console.error("Error:", err);
+                alert(lang.alertError);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 새해 첫 곡 - 키워드 선택</title>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-J0W132F99N');
+    </script>
+
+    <style>
+        /* CSS 디자인 유지 */
+        body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow: hidden; }
+        .container { width: 100%; max-width: 430px; height: 100%; background: linear-gradient(180deg, #1a1a1a 0%, #000000 30%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px; box-sizing: border-box; }
+        .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
+        .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; display: flex; align-items: center; }
+        .back-btn img { width: 48px; height: 48px; display: block; }
+        .title-area { margin-top: 10px; margin-bottom: 40px; }
+        h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; }
+        .highlight { color: #FFE173; }
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+        .option-btn { background-color: #282828; border: 1px solid transparent; border-radius: 12px; padding: 24px 0; font-size: 16px; color: #cccccc; cursor: pointer; transition: all 0.2s; }
+        .option-btn:hover { background-color: #333; }
+        .option-btn.selected { background-color: rgba(255, 225, 115, 0.3); border: 1px solid #FFE173; color: #FFE173; font-weight: 700; }
+        .button-area { position: absolute; bottom: 40px; left: 0; width: 100%; padding: 0 20px; box-sizing: border-box; }
+        .next-btn { width: 100%; padding: 18px 0; background-color: #FFE173; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; color: #000000; cursor: pointer; transition: opacity 0.3s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); }
+        .next-btn:active { transform: scale(0.98); }
+        .next-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="location.href='index.html'">
+                <img src="arrow-left.svg" alt="뒤로가기">
+            </button>
+        </div>
+        <div class="title-area">
+            <h2 id="pageTitle"></h2>
+        </div>
+        
+        <div class="grid-container" id="gridContainer"></div>
+
+        <div class="button-area">
+            <button id="nextBtn" class="next-btn" disabled onclick="saveAndNext()">다음</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedKeyword = "";
+        
+        // [언어 감지]
+        const isKorean = navigator.language.includes('ko');
+
+        // [다국어 데이터]
+        const i18n = {
+            ko: {
+                title: `새해 소원과 관련된<br><span class="highlight">단어</span>를 골라주세요.`,
+                options: ["재물", "사랑", "건강", "커리어", "평화", "이동"],
+                btn: "다음"
+            },
+            en: {
+                title: `Select a <span class="highlight">keyword</span><br>related to your wish.`,
+                options: ["Wealth", "Love", "Health", "Career", "Peace", "Travel"],
+                btn: "Next"
+            }
+        };
+
+        window.onload = function() {
+            const lang = isKorean ? i18n.ko : i18n.en;
+
+            // 타이틀과 버튼 텍스트 설정
+            document.getElementById('pageTitle').innerHTML = lang.title;
+            document.getElementById('nextBtn').innerText = lang.btn;
+
+            // 키워드 버튼 동적 생성
+            const container = document.getElementById('gridContainer');
+            lang.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = function() { selectOption(this); };
+                container.appendChild(btn);
+            });
+        };
+
+        function selectOption(element) {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            element.classList.add('selected');
+            selectedKeyword = element.innerText; // 선택한 텍스트 저장
+
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.disabled = false; 
+        }
+
+        function saveAndNext() {
+            // [데이터 수집] 키워드 선택 이벤트 GA4로 전송
+            if (typeof gtag === 'function') {
+                gtag('event', 'select_keyword', {
+                    'keyword': selectedKeyword
+                });
+            }
+
+            // 로컬 스토리지 저장 및 이동
+            localStorage.setItem('userKeyword', selectedKeyword);
+            location.href = 'wish-input.html';
+        }
+    </script>
+</body>
+</html>
