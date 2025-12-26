@@ -24,10 +24,30 @@
         .page-title { margin-top: 10px; margin-bottom: 20px; }
         .page-title h2 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; white-space: nowrap; }
         
-        /* 앨범 커버 배경색을 투명하게 수정 */
-        .album-cover { width: 100%; height: 0; padding-bottom: 100%; position: relative; background-color: transparent; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
-        .album-cover img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+        /* 배경색 투명하게 유지 및 그림자 설정 */
+        .album-cover { 
+            width: 100%; 
+            height: 0; 
+            padding-bottom: 100%; 
+            position: relative; 
+            background-color: transparent; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            margin-bottom: 24px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
+        }
         
+        /* object-fit을 contain으로 설정하여 이미지가 전체가 보이도록 수정 */
+        .album-cover img { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            display: block; 
+        }
+
         .song-info { margin-bottom: 20px; }
         .song-title { font-size: 20px; font-weight: 800; margin: 0 0 5px 0; }
         .artist-name { font-size: 16px; color: #aaaaaa; margin: 0; font-weight: 400; }
@@ -108,7 +128,7 @@
             const albumImg = document.getElementById('albumImg');
             const rawImgUrl = urlParams.get('img');
             
-            // 기본 이미지를 record.png로 변경
+            // 기본 이미지를 record.png로 설정
             const DEFAULT_IMG = "record.png";
 
             if (rawImgUrl) {
@@ -122,7 +142,7 @@
                 albumImg.onerror = function() {
                     this.src = proxy2;
                     this.onerror = function() {
-                        this.src = DEFAULT_IMG; // 모든 시도 실패 시 record.png 노출
+                        this.src = DEFAULT_IMG;
                     };
                 };
             } else {
