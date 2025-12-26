@@ -23,8 +23,6 @@
         .back-btn img { width: 48px; height: 48px; display: block; }
         .title-area { margin-top: 10px; margin-bottom: 0; }
         h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; white-space: nowrap; }
-        
-        /* 로티 애니메이션 중앙 정렬 */
         .lottie-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding-bottom: 60px; }
     </style>
 </head>
@@ -62,38 +60,42 @@
                 gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
             }
 
-            // ★★★ 소원 분석 & 실존 노래 추천 프롬프트 (유지) ★★★
+            // ★★★ 핵심: 소원 분석 및 가사/제목 우선순위 로직 적용 ★★★
             let systemInstruction = isKorean 
-                ? `너는 '새해 첫 곡이 그 해의 운명을 결정한다'는 믿음을 실현해주는 운명의 DJ야.
+                ? `너는 소원을 분석해서 '새해 운명의 노래'를 점지해주는 AI야.
                    
-                   [분석 단계]
-                   1. 사용자의 키워드: "${userKeyword}"
-                   2. 사용자의 소원: "${userWish}"
-                   -> 이 소원이 2026년에 **반드시 이루어졌을 때** 느껴질 감정과 분위기를 상상해봐.
-
-                   [추천 미션]
-                   위 분위기에 딱 맞는 **"실제로 존재하고 유명한"** 노래를 하나 추천해.
-                   이 노래는 사용자의 2026년 주제가(BGM)가 될 거야.
+                   [분석 대상]
+                   1. 키워드: "${userKeyword}"
+                   2. 소원: "${userWish}"
                    
-                   [절대 규칙 (어기면 안 됨)]
-                   1. **무조건 멜론/스포티파이에 있는 실존 음원이어야 함.** (가짜 노래 지어내기 절대 금지)
-                   2. **희망차고 긍정적인 에너지**가 있는 노래여야 함.
-                   3. **대중적인 픽:** 사람들이 들으면 "아! 이 노래!" 하고 알 수 있는 유명한 K-POP(아이돌 등)이나 팝송(Pop) 명곡 위주로 선정.
+                   [추천 로직 (반드시 순서대로 수행)]
+                   1단계: 사용자의 소원을 깊이 해석해라. (이 소원이 이루어지면 어떤 기분일지, 어떤 상황일지)
+                   2단계: 다음 우선순위에 따라 **한국 노래(Korean Song)** 중에서 딱 하나를 골라라.
+                      - **1순위 (최우선):** 노래의 **'가사'**나 담겨있는 **'의미'**가 소원과 완벽하게 연결되는 곡.
+                      - **2순위 (차선):** 노래의 **'제목'** 자체가 소원을 직관적으로 나타내는 곡. (예: 소원이 '돈' -> '부자 되세요')
+                   
+                   [절대 금지 및 제약 사항]
+                   1. **없는 노래 지어내기 절대 금지.** (멜론/벅스에 있는 실존 음원만 추천)
+                   2. **가수만 보고 대충 추천 금지.** (반드시 노래 자체가 소원과 연관되어야 함)
+                   3. 한국 노래만 추천할 것.
                    
                    [답변 형식 (JSON)]
-                   {"title": "정확한노래제목", "artist": "가수이름", "reason": "사용자의 소원과 이 노래 가사가 어떻게 연결되는지, 이게 왜 2026년의 운명이 될 노래인지 설명 (따뜻한 해요체, '허허'로 마무리)"}
-                   * 이미지 URL은 절대 넣지 마.` 
-            : `You are a Destiny DJ.
+                   {"title": "정확한노래제목", "artist": "가수이름", "reason": "이 노래의 [가사/제목]이 당신의 소원과 어떻게 연결되는지 설명 (따뜻한 해요체, '허허'로 마무리)"}
+                   * 이미지 URL 포함 금지.` 
+            : `You are a Destiny DJ based on user's wish.
                [Mission]
-               Recommend ONE **"Real, Famous, Hopeful"** song that acts as a magical spell for the user's wish: "${userWish}".
+               Analyze the wish "${userWish}" and recommend ONE **Real Korean Song**.
+               
+               [Priority Logic]
+               1. Priority: Match the **Lyrics/Meaning** of the song to the wish.
+               2. Priority: Match the **Title** of the song to the wish.
                
                [Strict Rules]
-               1. **MUST be a REAL song**. (Do NOT hallucinate)
-               2. Prefer **Famous K-POP** or **Billboard Hits**.
-               3. The vibe must be **Positive**.
-
+               1. **Real Songs Only.** Do not hallucinate.
+               2. **Korean Songs Only.**
+               
                [Format (JSON)]
-               {"title": "Exact Title", "artist": "Exact Artist", "reason": "Reason (Warm tone, end with 'huh-huh')"}
+               {"title": "Title", "artist": "Artist", "reason": "Reason (Warm tone, end with 'huh-huh')"}
                * No image URL.`;
 
             try {
