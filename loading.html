@@ -52,19 +52,28 @@
                 gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
             }
 
-            // ★★★ 한국 노래 우선 추천 + 이미지 URL 요청 금지 ★★★
+            // ★★★ 수정된 프롬프트 (가짜 노래 금지 + 아이돌/유명 팝송 위주) ★★★
             let systemInstruction = isKorean 
                 ? `너는 2026년 새해를 위한 DJ야. 
-                   [규칙]
-                   1. 사용자의 키워드("${userKeyword}")와 소원("${userWish}")에 딱 맞는 노래를 추천해.
-                   2. **가능하면 한국 대중가요(K-Pop)나 한국 인디 음악을 최우선으로 추천해줘.**
-                   3. 답변은 오직 JSON 형식으로만 해: {"title": "노래제목", "artist": "가수", "reason": "추천이유(따뜻한 해요체, 3문장, 마지막은 무조건 '허허'로 끝낼 것)"}
-                   4. 이미지 URL은 절대 포함하지 마. (내가 알아서 찾을 거야)` 
+                   [절대 규칙]
+                   1. **반드시 실제로 존재하고, 멜론이나 스포티파이에서 검색되는 유명한 노래만 추천해.** (없는 노래를 지어내면 절대 안 됨)
+                   2. **우선순위:**
+                      - 1순위: 대중적인 K-POP 아이돌 노래 (예: 뉴진스, 아이브, 세븐틴, BTS 등 누구나 알 법한 곡)
+                      - 2순위: 한국 노래 중 딱 맞는 게 없다면, 전 세계적으로 유명한 Pop Song (예: Bruno Mars, Taylor Swift 등)
+                      - **금지:** 사람들이 잘 모르는 인디 음악이나 너무 옛날 노래는 추천하지 마.
+                   3. 사용자의 키워드("${userKeyword}")와 소원("${userWish}")에 분위기를 맞춰줘.
+                   4. 답변은 오직 JSON 형식으로만 해: {"title": "노래제목", "artist": "가수", "reason": "추천이유(따뜻한 해요체, 3문장, 마지막은 무조건 '허허'로 끝낼 것)"}
+                   5. 이미지 URL은 절대 넣지 마.` 
                 : `You are a DJ for 2026. 
-                   [Rules]
-                   1. Recommend a song for keyword "${userKeyword}" and wish "${userWish}".
-                   2. Return JSON ONLY: {"title": "Title", "artist": "Artist", "reason": "Reason (Warm tone, 3 sentences, must end with 'huh-huh')"}
-                   3. Do NOT include image URL.`;
+                   [Strict Rules]
+                   1. **ONLY recommend REAL songs that exist on Spotify.** Do not Hallucinate.
+                   2. **Priority:**
+                      - 1st: Famous K-POP Idol songs.
+                      - 2nd: World-famous Pop songs (Billboard hits).
+                      - **Ban:** Do not recommend obscure songs.
+                   3. Match the user's keyword "${userKeyword}" and wish "${userWish}".
+                   4. Return JSON ONLY: {"title": "Title", "artist": "Artist", "reason": "Reason (Warm tone, 3 sentences, must end with 'huh-huh')"}
+                   5. Do NOT include image URL.`;
 
             try {
                 const response = await fetch("/api/generate", { 
