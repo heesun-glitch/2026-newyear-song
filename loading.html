@@ -56,11 +56,15 @@
         };
 
         async function fetchAIRecommendation() {
+            // ★ GA4 데이터 전송: AI에게 분석을 요청하는 순간을 기록합니다.
             if (typeof gtag === 'function') { 
-                gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
+                gtag('event', 'ai_request', { 
+                    'event_category': 'API',
+                    'search_term': userKeyword, 
+                    'user_wish': userWish 
+                }); 
             }
 
-            // 프롬프트: 소원과 키워드만 전달하면 됨 (나머지는 백엔드가 처리)
             let systemInstruction = isKorean 
                 ? `사용자 정보:
                    - 키워드: "${userKeyword}"
@@ -87,6 +91,7 @@
                 const aiContent = data.choices ? data.choices[0].message.content : JSON.stringify(data);
                 const result = JSON.parse(aiContent);
                 
+                // 결과 페이지로 데이터 전달 (리다이렉트)
                 location.replace(`result.html?t=${encodeURIComponent(result.title)}&a=${encodeURIComponent(result.artist)}&r=${encodeURIComponent(result.reason)}&w=${encodeURIComponent(userWish)}&img=${encodeURIComponent(result.img_url)}`);
 
             } catch (error) { 
