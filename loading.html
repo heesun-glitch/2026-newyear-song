@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyzing...</title>
     
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
@@ -23,6 +23,8 @@
         .back-btn img { width: 48px; height: 48px; display: block; }
         .title-area { margin-top: 10px; margin-bottom: 0; }
         h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; white-space: nowrap; }
+        
+        /* 로티 애니메이션 중앙 정렬 */
         .lottie-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding-bottom: 60px; }
     </style>
 </head>
@@ -32,7 +34,14 @@
         <div class="title-area"><h2 id="loadingTitle">새해 소원 분석 중...</h2></div>
         
         <div class="lottie-wrapper">
-            <lottie-player src="https://lottie.host/0eb64900-9ece-4d58-951f-684a16c1e285/HPQMTQlKxY.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></lottie-player>
+            <dotlottie-player 
+                src="https://lottie.host/0eb64900-9ece-4d58-951f-684a16c1e285/HPQMTQlKxY.lottie" 
+                background="transparent" 
+                speed="1" 
+                style="width: 300px; height: 300px;" 
+                loop 
+                autoplay>
+            </dotlottie-player>
         </div>
     </div>
 
@@ -53,7 +62,7 @@
                 gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
             }
 
-            // ★★★ 핵심: 소원 분석 및 실존 노래 추천을 위한 강력한 프롬프트 ★★★
+            // ★★★ 소원 분석 & 실존 노래 추천 프롬프트 (유지) ★★★
             let systemInstruction = isKorean 
                 ? `너는 '새해 첫 곡이 그 해의 운명을 결정한다'는 믿음을 실현해주는 운명의 DJ야.
                    
@@ -69,28 +78,22 @@
                    [절대 규칙 (어기면 안 됨)]
                    1. **무조건 멜론/스포티파이에 있는 실존 음원이어야 함.** (가짜 노래 지어내기 절대 금지)
                    2. **희망차고 긍정적인 에너지**가 있는 노래여야 함.
-                   3. **대중적인 픽:** 사람들이 들으면 "아! 이 노래!" 하고 알 수 있는 유명한 K-POP(아이돌 등)이나 팝송(Pop) 명곡 위주로 선정. (모르는 노래 금지)
+                   3. **대중적인 픽:** 사람들이 들으면 "아! 이 노래!" 하고 알 수 있는 유명한 K-POP(아이돌 등)이나 팝송(Pop) 명곡 위주로 선정.
                    
                    [답변 형식 (JSON)]
                    {"title": "정확한노래제목", "artist": "가수이름", "reason": "사용자의 소원과 이 노래 가사가 어떻게 연결되는지, 이게 왜 2026년의 운명이 될 노래인지 설명 (따뜻한 해요체, '허허'로 마무리)"}
                    * 이미지 URL은 절대 넣지 마.` 
-            : `You are a Destiny DJ who believes 'The first song of the year decides your fate'.
-               
-               [Analysis]
-               User Keyword: "${userKeyword}"
-               User Wish: "${userWish}"
-               -> Imagine the feeling of this wish COMING TRUE in 2026.
-
+            : `You are a Destiny DJ.
                [Mission]
-               Recommend ONE **"Real, Famous, Hopeful"** song that acts as a magical spell for this wish.
+               Recommend ONE **"Real, Famous, Hopeful"** song that acts as a magical spell for the user's wish: "${userWish}".
                
                [Strict Rules]
-               1. **MUST be a REAL song** on Spotify. (Do NOT hallucinate)
-               2. Prefer **Famous K-POP** or **Billboard Hits**. (No obscure songs)
-               3. The vibe must be **Positive and Successful**.
+               1. **MUST be a REAL song**. (Do NOT hallucinate)
+               2. Prefer **Famous K-POP** or **Billboard Hits**.
+               3. The vibe must be **Positive**.
 
                [Format (JSON)]
-               {"title": "Exact Title", "artist": "Exact Artist", "reason": "Explain why this song is the BGM for their success (Warm tone, end with 'huh-huh')"}
+               {"title": "Exact Title", "artist": "Exact Artist", "reason": "Reason (Warm tone, end with 'huh-huh')"}
                * No image URL.`;
 
             try {
