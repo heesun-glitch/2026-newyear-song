@@ -13,11 +13,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 새해 첫 곡</title>
 
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://2026-newyear-song.vercel.app/">
+    <meta property="og:title" content="2026년 나만의 새해 첫 곡 찾기">
+    <meta property="og:description" content="새해 소원을 적고 2026년을 시작할 노래를 만나보세요.">
+    <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
+
     <style>
-        /* 수정: overflow 제거 및 높이 유동적으로 변경 */
+        /* 기존 스타일 유지 */
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; }
-        
-        /* 수정: padding-bottom 추가 (버튼에 가려지지 않게), overflow 제거 */
         .container { width: 100%; max-width: 430px; min-height: 100vh; background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%); margin: 0 auto; position: relative; display: flex; flex-direction: column; align-items: center; padding: 0 0 120px 0; box-sizing: border-box; }
         
         .content-top { margin-top: 60px; padding: 0 20px; text-align: center; z-index: 2; flex-shrink: 0; }
@@ -35,7 +39,6 @@
             display: block; 
         }
         
-        /* 수정: position: fixed로 변경하여 항상 화면 하단에 고정 */
         .button-area { 
             position: fixed; 
             bottom: 40px; 
