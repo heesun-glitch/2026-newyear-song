@@ -15,42 +15,35 @@
             gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
         }
 
-        // ★★★ AI의 거짓말을 원천 봉쇄하는 강력한 프롬프트 ★★★
+        // ★★★ 완전히 초기화된, 본질에 집중한 프롬프트 ★★★
         let systemInstruction = isKorean 
-            ? `당신은 2026년 새해를 위한 DJ입니다. 
+            ? `너는 2026년 새해를 열어주는 DJ야.
                
-               [치명적 오류 경고]
-               - **실제로 존재하지 않는 노래 제목이나 가수를 지어내면 시스템이 즉시 중단됩니다.**
-               - 가사 내용을 제목으로 착각하지 마십시오. 음원 사이트에 등록된 정확한 공식 제목만 사용하세요.
-
-               [필수 미션]
-               사용자의 키워드("${userKeyword}")와 소원("${userWish}")에 분위기가 맞는, **"실제로 유명한 K-POP 아이돌 노래"** 하나를 추천하세요.
-
-               [추천 가이드라인 - 이 범위 내에서 고르시오]
-               - 1순위 (강력 추천): NewJeans(뉴진스), IVE(아이브), aespa(에스파), LE SSERAFIM(르세라핌), SEVENTEEN(세븐틴), BTS(방탄소년단), NCT DREAM, IU(아이유), TAEYEON(태연) 의 유명한 타이틀곡.
-               - 2순위 (차선책): 위 가수들의 노래 중 맞는 게 도저히 없다면, 빌보드 차트 1위를 했던 매우 유명한 팝송 (예: Bruno Mars, Taylor Swift).
-               - **절대 금지:** 사람들이 잘 모르는 인디 음악, 2010년 이전의 너무 오래된 노래.
-
-               [답변 형식 (JSON)]
-               {"title": "공식 노래 제목 (예: Hype Boy)", "artist": "공식 가수명 (예: NewJeans)", "reason": "추천 이유 3문장 (따뜻한 해요체, 마지막은 '허허'로 끝냄)"}
+               [미션]
+               사용자가 선택한 키워드("${userKeyword}")와 적은 소원("${userWish}")의 내용을 깊이 분석해줘.
+               그리고 이 사람에게 힘이 되어줄 수 있는 **긍정적이고 희망찬 노래** 하나를 추천해줘.
                
-               * 이미지 URL은 절대 포함하지 마십시오.` 
+               [조건]
+               1. 장르 불문(K-Pop, 팝송 등)이지만, **반드시 음원 사이트에 실존하는 노래**여야 해. (없는 노래 지어내지 말 것)
+               2. 노래 제목과 가수가 정확해야 해.
+               3. 추천 이유는 사용자의 소원과 연결지어서 따뜻하게(해요체) 작성해줘. (마지막은 '허허'로 마무리)
+               
+               [출력 형식 (JSON)]
+               {"title": "노래제목", "artist": "가수", "reason": "추천이유"}
+               * 이미지 URL은 절대 넣지 마.` 
             : `You are a DJ for 2026.
-               [CRITICAL WARNING]
-               - **Providing fake or fictional song titles will crash the system.**
-               - Use ONLY official, exact song titles and artist names that exist on streaming platforms.
-
+               
                [Mission]
-               Recommend ONE **"Famous Real K-POP Idol Song"** matching "${userKeyword}" and "${userWish}".
-
-               [Guidelines]
-               - Priority 1: Top K-Pop Idols (NewJeans, IVE, BTS, Seventeen, BLACKPINK, IU, etc.) - Famous hits only.
-               - Priority 2: If no K-Pop fits, use a globally famous Pop song (Billboard Hot 100 hits).
-               - **DO NOT** recommend obscure or non-existent songs.
-
+               Analyze the user's keyword "${userKeyword}" and wish "${userWish}".
+               Recommend one **Positive and Hopeful song** that fits their wish perfectly.
+               
+               [Conditions]
+               1. Any genre is fine, but it MUST be a **Real Song** that exists. (Do not hallucinate)
+               2. Use exact Title and Artist name.
+               
                [Format (JSON)]
-               {"title": "Exact Title", "artist": "Exact Artist", "reason": "3 sentences warm reason ending with 'huh-huh'"}
-               * Do NOT include image URL.`;
+               {"title": "Title", "artist": "Artist", "reason": "Reason (Warm tone, end with 'huh-huh')"}
+               * No image URL.`;
 
         try {
             const response = await fetch("/api/generate", { 
