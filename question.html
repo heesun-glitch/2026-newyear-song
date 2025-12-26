@@ -87,19 +87,14 @@
         }
 
         function saveAndNext() {
-            // 1. GA4 이벤트 전송: 사용자가 어떤 키워드를 선택했는지 추적
+            // ★ 수정됨: GA4로 'user_keyword' 파라미터를 명확하게 전송합니다.
             if (typeof gtag === 'function') { 
                 gtag('event', 'select_keyword', { 
-                    'event_category': 'Input',
-                    'event_label': selectedKeyword, // 보고서에서 쉽게 보기 위함
-                    'user_keyword': selectedKeyword // 맞춤 측정기준용
+                    'user_keyword': selectedKeyword 
                 }); 
             }
             
-            // 2. 선택한 키워드 저장 (다음 페이지에서 쓰기 위함)
             localStorage.setItem('userKeyword', selectedKeyword);
-            
-            // 3. 소원 입력 페이지로 이동 (중요: 흐름 유지)
             location.href = 'wish-input.html';
         }
     </script>
