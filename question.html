@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 새해 첫 곡 - 키워드 선택</title>
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -11,6 +12,7 @@
       gtag('js', new Date());
       gtag('config', 'G-J0W132F99N');
     </script>
+    
     <style>
         /* 수정: overflow 제거, min-height 적용 */
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; }
@@ -61,6 +63,7 @@
             ko: { title: `새해 소원과 관련된<br><span class="highlight">단어</span>를 골라주세요.`, options: ["돈", "사랑", "건강", "커리어", "평화", "이동"], btn: "다음" },
             en: { title: `Select a <span class="highlight">keyword</span><br>related to your wish.`, options: ["Money", "Love", "Health", "Career", "Peace", "Travel"], btn: "Next" }
         };
+
         window.onload = function() {
             const lang = isKorean ? i18n.ko : i18n.en;
             document.getElementById('pageTitle').innerHTML = lang.title;
@@ -74,6 +77,7 @@
                 container.appendChild(btn);
             });
         };
+
         function selectOption(element) {
             const buttons = document.querySelectorAll('.option-btn');
             buttons.forEach(btn => btn.classList.remove('selected'));
@@ -81,9 +85,21 @@
             selectedKeyword = element.innerText;
             document.getElementById('nextBtn').disabled = false; 
         }
+
         function saveAndNext() {
-            if (typeof gtag === 'function') { gtag('event', 'select_keyword', { 'keyword': selectedKeyword }); }
+            // 1. GA4 이벤트 전송: 사용자가 어떤 키워드를 선택했는지 추적
+            if (typeof gtag === 'function') { 
+                gtag('event', 'select_keyword', { 
+                    'event_category': 'Input',
+                    'event_label': selectedKeyword, // 보고서에서 쉽게 보기 위함
+                    'user_keyword': selectedKeyword // 맞춤 측정기준용
+                }); 
+            }
+            
+            // 2. 선택한 키워드 저장 (다음 페이지에서 쓰기 위함)
             localStorage.setItem('userKeyword', selectedKeyword);
+            
+            // 3. 소원 입력 페이지로 이동 (중요: 흐름 유지)
             location.href = 'wish-input.html';
         }
     </script>

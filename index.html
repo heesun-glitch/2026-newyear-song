@@ -80,16 +80,15 @@
 
     <script>
         window.onload = function() {
+            // 1. 언어 설정 및 텍스트 색상 적용 로직
             const isKorean = navigator.language.includes('ko');
             const i18n = {
                 ko: {
-                    // ★★★ 수정됨: <span> 태그로 색상 적용 ★★★
                     title: "2026년<br>나만의 <span style='color: #FFE173;'>새해 첫 곡</span> 찾기",
                     subtitle: "새해 소원을 적고 2026년을 시작할 노래를 만나보세요.",
                     btn: "시작하기"
                 },
                 en: {
-                    // ★★★ 수정됨: 영어 버전도 동일하게 색상 적용 ★★★
                     title: "My 2026<br><span style='color: #FFE173;'>New Year Song</span>",
                     subtitle: "Make a wish and find your perfect song for 2026.",
                     btn: "Start Now"
@@ -99,6 +98,16 @@
             document.getElementById('mainTitle').innerHTML = lang.title;
             document.getElementById('subTitle').innerText = lang.subtitle;
             document.getElementById('startBtn').innerText = lang.btn;
+
+            // 2. [추가됨] 시작 버튼 클릭 데이터 전송 (데이터 분석용)
+            document.getElementById('startBtn').addEventListener('click', function() {
+                if (typeof gtag === 'function') {
+                    gtag('event', 'click_start', {
+                        'event_category': 'Engagement',
+                        'event_label': 'Start Button'
+                    });
+                }
+            });
         };
     </script>
 </body>

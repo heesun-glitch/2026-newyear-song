@@ -62,12 +62,14 @@
             ko: { title: `새해 소원을<br><span class="highlight">한 문장</span>으로 적어주세요.`, placeholder: "새해 소원을 입력해 주세요.", btn: "다음" },
             en: { title: `Write your wish<br>in <span class="highlight">one sentence</span>.`, placeholder: "Please enter your wish.", btn: "Next" }
         };
+
         window.onload = function() {
             const lang = isKorean ? i18n.ko : i18n.en;
             document.getElementById('pageTitle').innerHTML = lang.title;
             document.getElementById('wishInput').placeholder = lang.placeholder;
             document.getElementById('nextBtn').innerText = lang.btn;
         };
+
         function checkInput() {
             const input = document.getElementById('wishInput');
             const wrapper = document.getElementById('inputWrapper');
@@ -79,9 +81,21 @@
             currentCountSpan.style.color = length > 0 ? "#ffffff" : "#555555";
             length > 0 ? wrapper.classList.add('filled') : wrapper.classList.remove('filled');
         }
+
         function saveAndGo() {
             const input = document.getElementById('wishInput');
-            if (typeof gtag === 'function') { gtag('event', 'input_wish', { 'wish_length': input.value.length }); }
+            const savedKeyword = localStorage.getItem('userKeyword') || 'Unknown'; // 이전 페이지에서 저장한 키워드 불러오기
+
+            // 1. GA4로 소원 데이터 전송 (가장 중요)
+            if (typeof gtag === 'function') { 
+                gtag('event', 'submit_wish', { 
+                    'event_category': 'Input',
+                    'user_keyword': savedKeyword, // 키워드와 소원을 묶어서 분석 가능
+                    'user_wish': input.value 
+                }); 
+            }
+
+            // 2. 소원 저장 및 이동
             localStorage.setItem('userWish', input.value);
             location.href = 'loading.html';
         }

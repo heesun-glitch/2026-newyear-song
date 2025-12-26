@@ -119,9 +119,24 @@
                 document.getElementById('btnSave').innerText = isKorean ? "공유하기" : "Share";
             }
 
-            document.getElementById('songTitle').innerText = urlParams.get('t') || "";
-            document.getElementById('artistName').innerText = urlParams.get('a') || "";
-            document.getElementById('reasonText').innerHTML = `"${urlParams.get('w') || ""}"<br>${urlParams.get('r') || ""}`;
+            const title = urlParams.get('t') || "";
+            const artist = urlParams.get('a') || "";
+            const wish = urlParams.get('w') || "";
+            const reason = urlParams.get('r') || "";
+
+            document.getElementById('songTitle').innerText = title;
+            document.getElementById('artistName').innerText = artist;
+            document.getElementById('reasonText').innerHTML = `"${wish}"<br>${reason}`;
+
+            // ★★★ [수정됨] GA4 결과 데이터 전송 ★★★
+            if (typeof gtag === 'function') {
+                gtag('event', 'view_result', {
+                    'event_category': 'Result',
+                    'song_title': title,
+                    'song_artist': artist,
+                    'user_wish': wish
+                });
+            }
 
             const albumImg = document.getElementById('albumImg');
             const rawImgUrl = urlParams.get('img');
