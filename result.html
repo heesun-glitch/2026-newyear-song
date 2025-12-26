@@ -24,7 +24,6 @@
         .page-title { margin-top: 10px; margin-bottom: 20px; }
         .page-title h2 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; white-space: nowrap; }
         
-        /* 앨범 커버: 배경 투명화 및 그림자 유지 */
         .album-cover { 
             width: 100%; 
             height: 0; 
@@ -37,7 +36,6 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
         }
         
-        /* 이미지: 잘림 방지를 위해 contain으로 설정 */
         .album-cover img { 
             position: absolute; 
             top: 0; 
@@ -93,8 +91,8 @@
         <div class="notice-area" data-html2canvas-ignore="true">
             <ul class="notice-list">
                 <li>본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.</li>
-                <li>제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.</li>
-                <li>추천된 노래와 앨범 커버 이미지는 정보를 식별하기 위한 최소한의 보조 자료로만 활용됩니다.</li>
+                <li>제공된 데이터의 출처는 Spotify입니다.</li>
+                <li>추천된 노래와 앨범 커버 이미지는 정보 식별을 위한 보조 자료로만 활용됩니다.</li>
                 <li>본 서비스의 결과는 AI가 생성한 주관적인 내용입니다.</li>
             </ul>
         </div>
@@ -127,37 +125,40 @@
 
             const albumImg = document.getElementById('albumImg');
             const rawImgUrl = urlParams.get('img');
-            const DEFAULT_IMG = "record.png"; // 실패 시 노출될 파일
-
-            console.log("시작: 원본 이미지 URL ->", rawImgUrl);
+            const DEFAULT_IMG = "record.png";
 
             if (rawImgUrl) {
                 albumImg.crossOrigin = "anonymous";
                 albumImg.referrerPolicy = "no-referrer";
 
-                const proxy1 = `https://wsrv.nl/?url=${encodeURIComponent(rawImgUrl)}&output=jpg&noretina=1`;
-                const proxy2 = `https://images.weserv.nl/?url=${encodeURIComponent(rawImgUrl)}`;
+                // 스포티파이 최적화 프록시 (Cloudimage -> weserv -> AllOrigins)
+                const proxies = [
+                    `https://ade7766722.cloudimg.io/v7/${rawImgUrl}?w=640&h=640&func=crop`,
+                    `https://images.weserv.nl/?url=${encodeURIComponent(rawImgUrl)}&w=600`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(rawImgUrl)}`
+                ];
 
-                albumImg.src = proxy1;
-                console.log("1차 시도 (wsrv.nl):", proxy1);
+                let proxyIndex = 0;
 
-                albumImg.onerror = function() {
-                    console.warn("1차 로드 실패. 2차 시도 시작.");
-                    this.src = proxy2;
-                    console.log("2차 시도 (weserv.nl):", proxy2);
-
-                    this.onerror = function() {
-                        console.error("모든 프록시 시도 실패. 기본 이미지 출력.");
-                        this.src = DEFAULT_IMG;
-                        this.onerror = null; 
-                    };
+                const tryNextProxy = () => {
+                    if (proxyIndex < proxies.length) {
+                        console.log(`[Spotify] ${proxyIndex + 1}차 시도 중...`);
+                        albumImg.src = proxies[proxyIndex];
+                        proxyIndex++;
+                    } else {
+                        console.error("[Spotify] 모든 시도 실패. 기본 이미지 출력.");
+                        albumImg.src = DEFAULT_IMG;
+                        albumImg.onerror = null; 
+                    }
                 };
+
+                albumImg.onerror = tryNextProxy;
+                tryNextProxy(); 
 
                 albumImg.onload = function() {
-                    console.log("로드 완료! 현재 주소:", this.src);
+                    console.log("[Spotify] 이미지 로드 완료!");
                 };
             } else {
-                console.log("데이터에 URL이 없어 기본 이미지를 사용합니다.");
                 albumImg.src = DEFAULT_IMG;
             }
         };
@@ -169,7 +170,12 @@
         async function saveImageOrShare() {
             const captureArea = document.getElementById('captureArea');
             try {
-                const canvas = await html2canvas(captureArea, { useCORS: true, scale: 2, backgroundColor: "#000000" });
+                const canvas = await html2canvas(captureArea, { 
+                    useCORS: true, 
+                    scale: 2, 
+                    backgroundColor: "#000000",
+                    allowTaint: false
+                });
                 const imgData = canvas.toDataURL('image/png');
 
                 if (navigator.share && !isInApp) {
@@ -184,7 +190,8 @@
                     document.getElementById('resultModal').style.display = 'flex';
                 }
             } catch (err) {
-                alert(isKorean ? "오류가 발생했습니다." : "Error occurred.");
+                console.error(err);
+                alert(isKorean ? "이미지 생성 오류" : "Error");
             }
         }
     </script>
