@@ -68,7 +68,7 @@
 <body>
     <div class="container" id="captureArea">
         <div class="header" data-html2canvas-ignore="true">
-            <button class="back-btn" onclick="location.href='index.html'"><img src="arrow-left.svg" alt="Back"></button>
+            <button class="back-btn" onclick="retryService()"><img src="arrow-left.svg" alt="Back"></button>
         </div>
         <div class="page-title"><h2>2026년 나만의 새해 첫 곡</h2></div>
         <div class="album-cover">
@@ -86,7 +86,7 @@
             <button class="action-btn btn-save" id="btnSave" onclick="saveImageOrShare()">이미지 저장하기</button>
         </div>
         <div class="retry-area" data-html2canvas-ignore="true">
-            <a onclick="location.href='index.html'" class="retry-link">다시하기</a>
+            <a onclick="retryService()" class="retry-link">다시하기</a>
         </div>
         <div class="notice-area" data-html2canvas-ignore="true">
             <ul class="notice-list">
@@ -128,7 +128,6 @@
             document.getElementById('artistName').innerText = artist;
             document.getElementById('reasonText').innerHTML = `"${wish}"<br>${reason}`;
 
-            // ★★★ [수정됨] GA4 결과 데이터 전송 ★★★
             if (typeof gtag === 'function') {
                 gtag('event', 'view_result', {
                     'event_category': 'Result',
@@ -140,14 +139,13 @@
 
             const albumImg = document.getElementById('albumImg');
             const rawImgUrl = urlParams.get('img');
-            const DEFAULT_IMG = "record.png"; // 기본 이미지 (프로젝트 폴더에 있어야 함)
+            const DEFAULT_IMG = "record.png";
 
             if (rawImgUrl && rawImgUrl !== "" && rawImgUrl !== "undefined") {
                 albumImg.crossOrigin = "anonymous";
                 albumImg.src = rawImgUrl;
                 
                 albumImg.onerror = function() {
-                    console.log("이미지 로드 실패, 기본 이미지 사용");
                     this.src = DEFAULT_IMG;
                 };
             } else {
@@ -155,14 +153,34 @@
             }
         };
 
+        // 링크 복사 추적 기능 추가
         function copyLink() {
+            if (typeof gtag === 'function') {
+                gtag('event', 'click_copy_link', { 'event_category': 'Engagement' });
+            }
             navigator.clipboard.writeText(window.location.href).then(() => alert(isKorean ? "복사되었습니다." : "Copied."));
+        }
+
+        // 다시하기 추적 기능 추가
+        function retryService() {
+            if (typeof gtag === 'function') {
+                gtag('event', 'click_retry', { 'event_category': 'Engagement' });
+            }
+            location.href = 'index.html';
         }
 
         async function saveImageOrShare() {
             const captureArea = document.getElementById('captureArea');
+            
+            // 공유/저장 클릭 추적 추가
+            if (typeof gtag === 'function') {
+                gtag('event', 'click_share_or_save', { 
+                    'event_category': 'Engagement',
+                    'method': (navigator.share && !isInApp) ? 'Native Share' : 'Modal Save'
+                });
+            }
+
             try {
-                // html2canvas 설정: 이미지가 외부 도메인(Deezer)이므로 useCORS 필수
                 const canvas = await html2canvas(captureArea, { 
                     useCORS: true, 
                     scale: 2, 
