@@ -65,7 +65,7 @@
 
     <div class="container">
         <div class="content-top">
-            <h1 id="mainTitle">2026년<br>나만의 새해 첫 곡 찾기</h1>
+            <h1 id="mainTitle">2026년<br>나만의 <span style="color: #FFE173;">새해 첫 곡</span> 찾기</h1>
             <p class="subtitle" id="subTitle">새해 소원을 적고 2026년을 시작할 노래를 만나보세요.</p>
         </div>
 
@@ -83,12 +83,14 @@
             const isKorean = navigator.language.includes('ko');
             const i18n = {
                 ko: {
-                    title: "2026년<br>나만의 새해 첫 곡 찾기",
+                    // ★★★ 수정됨: <span> 태그로 색상 적용 ★★★
+                    title: "2026년<br>나만의 <span style='color: #FFE173;'>새해 첫 곡</span> 찾기",
                     subtitle: "새해 소원을 적고 2026년을 시작할 노래를 만나보세요.",
                     btn: "시작하기"
                 },
                 en: {
-                    title: "My 2026<br>New Year Song",
+                    // ★★★ 수정됨: 영어 버전도 동일하게 색상 적용 ★★★
+                    title: "My 2026<br><span style='color: #FFE173;'>New Year Song</span>",
                     subtitle: "Make a wish and find your perfect song for 2026.",
                     btn: "Start Now"
                 }
