@@ -175,8 +175,6 @@ export default async function handler(req) {
         }
 
         // 1. AI에게 "DB에서 골라달라"고 요청
-        // 노래 리스트 전체를 프롬프트에 넘겨줍니다. (JSON으로 변환하여 전달)
-        // 토큰 절약을 위해 id, title, artist, tags만 전달
         const dbString = JSON.stringify(SONG_DATABASE.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
         
         const finalPrompt = `
@@ -215,10 +213,11 @@ export default async function handler(req) {
         const aiSelection = JSON.parse(data.choices[0].message.content);
 
         // 2. AI가 선택한 ID로 우리 DB에서 정확한 노래 정보 가져오기
-        const selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
+        // ★★★ [수정됨] const -> let으로 변경하여 에러 해결 ★★★
+        let selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
 
         if (!selectedSong) {
-            // 만약 AI가 이상한 ID를 주면(그럴 일 거의 없지만), 랜덤으로 안전한 노래(1번) 추천
+            // 만약 AI가 이상한 ID를 주면, 랜덤으로 안전한 노래(1번) 추천
             console.error("AI returned invalid ID, fallback to ID 1");
             selectedSong = SONG_DATABASE[0];
         }
@@ -232,7 +231,6 @@ export default async function handler(req) {
         };
 
         // 4. Deezer에서 이미지 가져오기
-        // DB에 있는 정보는 정확하므로 '정밀 검색'을 사용
         const query = `artist:"${selectedSong.artist}" track:"${selectedSong.title}"`;
         try {
             let searchRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`);
@@ -241,7 +239,6 @@ export default async function handler(req) {
             if (searchData.data && searchData.data.length > 0) {
                 result.img_url = searchData.data[0].album.cover_xl;
             } else {
-                // 혹시라도 정밀 검색 실패하면 일반 검색 시도
                 let looseRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(selectedSong.artist + " " + selectedSong.title)}`);
                 let looseData = await looseRes.json();
                 if (looseData.data && looseData.data.length > 0) {
