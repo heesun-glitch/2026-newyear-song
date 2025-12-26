@@ -31,26 +31,34 @@ export default async function handler(req) {
         });
 
         const data = await response.json();
-        
-        // 2. AI 응답에서 노래 제목과 가수 꺼내기
         let content = JSON.parse(data.choices[0].message.content);
-        const query = `${content.artist} ${content.title}`;
+        
+        // 2. Deezer에서 이미지 검색 (AI가 준 건 가짜니까 무시하고 새로 찾음)
+        content.img_url = ""; 
 
-        // 3. 실제 음악 DB(Deezer)에서 앨범 커버 검색하기 (키 필요 없음, 무료)
+        // 전략 A: "가수 + 제목"으로 정확하게 검색
+        const query = `${content.artist} ${content.title}`;
         try {
-            const searchRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`);
-            const searchData = await searchRes.json();
+            let searchRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`);
+            let searchData = await searchRes.json();
             
             if (searchData.data && searchData.data.length > 0) {
-                // 고화질 앨범 커버(xl)를 찾아서 AI가 만든 가짜 주소 대신 넣어줌
+                // 고화질(xl) 커버 이미지 사용
                 content.img_url = searchData.data[0].album.cover_xl;
+            } else {
+                // 전략 B: 노래를 못 찾았다면 "가수 이름"으로라도 검색 (이미지 빈칸 방지)
+                console.log("노래 검색 실패, 가수로 재검색");
+                let artistRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(content.artist)}`);
+                let artistData = await artistRes.json();
+                if (artistData.data && artistData.data.length > 0) {
+                    content.img_url = artistData.data[0].album.cover_xl;
+                }
             }
         } catch (e) {
-            console.error("Image search failed", e);
-            // 실패하면 그냥 AI가 준 거 씀 (어쩔 수 없음)
+            console.error("Deezer search failed", e);
         }
 
-        // 4. 수정된 데이터를 다시 포장해서 프론트엔드로 전달
+        // 3. 수정된 데이터를 다시 포장해서 프론트엔드로 전달
         data.choices[0].message.content = JSON.stringify(content);
         
         return new Response(JSON.stringify(data), {
