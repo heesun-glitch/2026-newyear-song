@@ -12,8 +12,12 @@
       gtag('config', 'G-J0W132F99N');
     </script>
     <style>
-        body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow: hidden; }
-        .container { width: 100%; max-width: 430px; height: 100%; background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px; box-sizing: border-box; }
+        /* 수정: overflow 제거, min-height 적용 */
+        body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; }
+        
+        /* 수정: 하단 패딩 추가, min-height 적용 */
+        .container { width: 100%; max-width: 430px; min-height: 100vh; background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px 120px 20px; box-sizing: border-box; }
+        
         .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
         .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; display: flex; align-items: center; }
         .back-btn img { width: 48px; height: 48px; display: block; }
@@ -24,7 +28,20 @@
         .option-btn { background-color: #282828; border: 1px solid transparent; border-radius: 12px; padding: 24px 0; font-size: 16px; color: #cccccc; cursor: pointer; transition: all 0.2s; }
         .option-btn:hover { background-color: #333; }
         .option-btn.selected { background-color: rgba(255, 225, 115, 0.3); border: 1px solid #FFE173; color: #FFE173; font-weight: 700; }
-        .button-area { position: absolute; bottom: 40px; left: 0; width: 100%; padding: 0 20px; box-sizing: border-box; }
+        
+        /* 수정: 화면 하단 고정 (Fixed) */
+        .button-area { 
+            position: fixed; 
+            bottom: 40px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 100%; 
+            max-width: 430px; 
+            padding: 0 20px; 
+            box-sizing: border-box; 
+            z-index: 999;
+        }
+        
         .next-btn { width: 100%; padding: 18px 0; background-color: #FFE173; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; color: #000000; cursor: pointer; transition: opacity 0.3s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); }
         .next-btn:active { transform: scale(0.98); }
         .next-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
