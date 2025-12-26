@@ -13,32 +13,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 새해 첫 곡</title>
 
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="2026 새해 첫 곡">
-    <meta property="og:title" content="2026년 나만의 새해 첫 곡 찾기">
-    <meta property="og:description" content="새해 소원을 적고 2026년을 시작할 노래를 만나보세요.">
-    <meta property="og:image" content="https://2026-first-song.netlify.app/og-image.png">
-    <meta property="og:url" content="https://2026-first-song.netlify.app">
-
     <style>
         body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow: hidden; }
         .container { width: 100%; max-width: 430px; height: 100%; background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%); margin: 0 auto; position: relative; display: flex; flex-direction: column; align-items: center; padding: 0; overflow: hidden; }
         
-        /* [수정] 상단 여백 유지하되 제목 밑 여백 축소 */
         .content-top { margin-top: 60px; padding: 0 20px; text-align: center; z-index: 2; flex-shrink: 0; }
-        h1 { font-size: 32px; font-weight: 800; margin-bottom: 5px; line-height: 1.4; } /* 10px -> 5px */
+        h1 { font-size: 32px; font-weight: 800; margin-bottom: 5px; line-height: 1.4; }
         p.subtitle { font-size: 16px; color: #acacac; margin: 0; }
         
-        /* [수정] 텍스트와 이미지 사이 간격 대폭 축소 (margin-top 제거) */
-        .main-image { width: 100%; margin-top: 0; flex-grow: 1; display: flex; align-items: center; justify-content: center; z-index: 1; padding-bottom: 280px; }
+        .main-image { width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; z-index: 1; overflow: hidden; }
         
-        /* [수정] 이미지를 위로 -300px 이동 */
-        .main-image img { width: 100%; height: auto; transform: scale(1.15) translateY(-300px); object-fit: cover; animation: float 3s ease-in-out infinite; display: block; }
+        /* 기본 위치를 아래로 100px 이동 */
+        .main-image img { 
+            width: 100%; 
+            height: auto; 
+            object-fit: cover; 
+            transform: translateY(100px); 
+            animation: float 3s ease-in-out infinite; 
+            display: block; 
+        }
         
         .button-area { position: absolute; bottom: 40px; left: 0; width: 100%; padding: 0 20px; box-sizing: border-box; z-index: 10; }
         .start-btn { width: 100%; padding: 18px 0; background-color: #FFE173; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; color: #000000; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25), 0 4px 10px rgba(255, 225, 115, 0.3); }
         .start-btn:active { transform: scale(0.98); }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+
+        /* 100px 내려간 위치를 기준으로 둥실거림 유지 */
+        @keyframes float { 
+            0% { transform: translateY(100px); } 
+            50% { transform: translateY(80px); } 
+            100% { transform: translateY(100px); } 
+        }
     </style>
 </head>
 <body>
@@ -50,7 +54,7 @@
         </div>
 
         <div class="main-image">
-            <img src="main-image.png" alt="3D 오브젝트">
+            <img src="3d-icon-image.png" alt="음악과 행운 아이콘">
         </div>
 
         <div class="button-area">
@@ -61,7 +65,6 @@
     <script>
         window.onload = function() {
             const isKorean = navigator.language.includes('ko');
-
             const i18n = {
                 ko: {
                     title: "2026년<br>나만의 새해 첫 곡 찾기",
@@ -74,9 +77,7 @@
                     btn: "Start Now"
                 }
             };
-
             const lang = isKorean ? i18n.ko : i18n.en;
-
             document.getElementById('mainTitle').innerHTML = lang.title;
             document.getElementById('subTitle').innerText = lang.subtitle;
             document.getElementById('startBtn').innerText = lang.btn;
