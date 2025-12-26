@@ -1,101 +1,76 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyzing...</title>
-    
-    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.11/dist/dotlottie-wc.js" type="module"></script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-J0W132F99N');
-    </script>
-    
-    <style>
-        body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow: hidden; }
-        .container { width: 100%; max-width: 430px; height: 100%; background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px; box-sizing: border-box; }
-        .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
-        .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; display: flex; align-items: center; }
-        .back-btn img { width: 48px; height: 48px; display: block; }
-        .title-area { margin-top: 10px; margin-bottom: 0; }
-        h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; white-space: nowrap; }
-        .lottie-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding-bottom: 60px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header"><button class="back-btn" onclick="history.back()"><img src="arrow-left.svg" alt="Back"></button></div>
-        <div class="title-area"><h2 id="loadingTitle">새해 소원 분석 중...</h2></div>
-        
-        <div class="lottie-wrapper">
-            <dotlottie-wc src="https://lottie.host/0eb64900-9ece-4d58-951f-684a16c1e285/HPQMTQlKxY.lottie" style="width: 300px; height: 300px;" autoplay loop loading="eager"></dotlottie-wc>
-        </div>
-    </div>
+<script>
+    const userKeyword = localStorage.getItem('userKeyword') || "Hope"; 
+    const userWish = localStorage.getItem('userWish') || "Happy New Year";
+    const isKorean = navigator.language.includes('ko');
 
-    <script>
-        const userKeyword = localStorage.getItem('userKeyword') || "Hope"; 
-        const userWish = localStorage.getItem('userWish') || "Happy New Year";
-        const isKorean = navigator.language.includes('ko');
-
-        window.onload = function() {
-            if (!isKorean) { 
-                document.getElementById('loadingTitle').innerText = "Analyzing your wish..."; 
-            }
-            fetchAIRecommendation();
-        };
-
-        async function fetchAIRecommendation() {
-            if (typeof gtag === 'function') { 
-                gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
-            }
-
-            // ★★★ 수정된 프롬프트 (가짜 노래 금지 + 아이돌/유명 팝송 위주) ★★★
-            let systemInstruction = isKorean 
-                ? `너는 2026년 새해를 위한 DJ야. 
-                   [절대 규칙]
-                   1. **반드시 실제로 존재하고, 멜론이나 스포티파이에서 검색되는 유명한 노래만 추천해.** (없는 노래를 지어내면 절대 안 됨)
-                   2. **우선순위:**
-                      - 1순위: 대중적인 K-POP 아이돌 노래 (예: 뉴진스, 아이브, 세븐틴, BTS 등 누구나 알 법한 곡)
-                      - 2순위: 한국 노래 중 딱 맞는 게 없다면, 전 세계적으로 유명한 Pop Song (예: Bruno Mars, Taylor Swift 등)
-                      - **금지:** 사람들이 잘 모르는 인디 음악이나 너무 옛날 노래는 추천하지 마.
-                   3. 사용자의 키워드("${userKeyword}")와 소원("${userWish}")에 분위기를 맞춰줘.
-                   4. 답변은 오직 JSON 형식으로만 해: {"title": "노래제목", "artist": "가수", "reason": "추천이유(따뜻한 해요체, 3문장, 마지막은 무조건 '허허'로 끝낼 것)"}
-                   5. 이미지 URL은 절대 넣지 마.` 
-                : `You are a DJ for 2026. 
-                   [Strict Rules]
-                   1. **ONLY recommend REAL songs that exist on Spotify.** Do not Hallucinate.
-                   2. **Priority:**
-                      - 1st: Famous K-POP Idol songs.
-                      - 2nd: World-famous Pop songs (Billboard hits).
-                      - **Ban:** Do not recommend obscure songs.
-                   3. Match the user's keyword "${userKeyword}" and wish "${userWish}".
-                   4. Return JSON ONLY: {"title": "Title", "artist": "Artist", "reason": "Reason (Warm tone, 3 sentences, must end with 'huh-huh')"}
-                   5. Do NOT include image URL.`;
-
-            try {
-                const response = await fetch("/api/generate", { 
-                    method: "POST", 
-                    headers: { "Content-Type": "application/json" }, 
-                    body: JSON.stringify({ systemInstruction }) 
-                });
-
-                if (!response.ok) throw new Error("Server Error");
-
-                const data = await response.json();
-                const aiContent = data.choices ? data.choices[0].message.content : JSON.stringify(data);
-                const result = JSON.parse(aiContent);
-                
-                location.replace(`result.html?t=${encodeURIComponent(result.title)}&a=${encodeURIComponent(result.artist)}&r=${encodeURIComponent(result.reason)}&w=${encodeURIComponent(userWish)}&img=${encodeURIComponent(result.img_url)}`);
-
-            } catch (error) { 
-                console.error(error);
-                alert("오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-                location.href = 'index.html'; 
-            }
+    window.onload = function() {
+        if (!isKorean) { 
+            document.getElementById('loadingTitle').innerText = "Analyzing your wish..."; 
         }
-    </script>
-</body>
-</html>
+        fetchAIRecommendation();
+    };
+
+    async function fetchAIRecommendation() {
+        if (typeof gtag === 'function') { 
+            gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
+        }
+
+        // ★★★ AI의 거짓말을 원천 봉쇄하는 강력한 프롬프트 ★★★
+        let systemInstruction = isKorean 
+            ? `당신은 2026년 새해를 위한 DJ입니다. 
+               
+               [치명적 오류 경고]
+               - **실제로 존재하지 않는 노래 제목이나 가수를 지어내면 시스템이 즉시 중단됩니다.**
+               - 가사 내용을 제목으로 착각하지 마십시오. 음원 사이트에 등록된 정확한 공식 제목만 사용하세요.
+
+               [필수 미션]
+               사용자의 키워드("${userKeyword}")와 소원("${userWish}")에 분위기가 맞는, **"실제로 유명한 K-POP 아이돌 노래"** 하나를 추천하세요.
+
+               [추천 가이드라인 - 이 범위 내에서 고르시오]
+               - 1순위 (강력 추천): NewJeans(뉴진스), IVE(아이브), aespa(에스파), LE SSERAFIM(르세라핌), SEVENTEEN(세븐틴), BTS(방탄소년단), NCT DREAM, IU(아이유), TAEYEON(태연) 의 유명한 타이틀곡.
+               - 2순위 (차선책): 위 가수들의 노래 중 맞는 게 도저히 없다면, 빌보드 차트 1위를 했던 매우 유명한 팝송 (예: Bruno Mars, Taylor Swift).
+               - **절대 금지:** 사람들이 잘 모르는 인디 음악, 2010년 이전의 너무 오래된 노래.
+
+               [답변 형식 (JSON)]
+               {"title": "공식 노래 제목 (예: Hype Boy)", "artist": "공식 가수명 (예: NewJeans)", "reason": "추천 이유 3문장 (따뜻한 해요체, 마지막은 '허허'로 끝냄)"}
+               
+               * 이미지 URL은 절대 포함하지 마십시오.` 
+            : `You are a DJ for 2026.
+               [CRITICAL WARNING]
+               - **Providing fake or fictional song titles will crash the system.**
+               - Use ONLY official, exact song titles and artist names that exist on streaming platforms.
+
+               [Mission]
+               Recommend ONE **"Famous Real K-POP Idol Song"** matching "${userKeyword}" and "${userWish}".
+
+               [Guidelines]
+               - Priority 1: Top K-Pop Idols (NewJeans, IVE, BTS, Seventeen, BLACKPINK, IU, etc.) - Famous hits only.
+               - Priority 2: If no K-Pop fits, use a globally famous Pop song (Billboard Hot 100 hits).
+               - **DO NOT** recommend obscure or non-existent songs.
+
+               [Format (JSON)]
+               {"title": "Exact Title", "artist": "Exact Artist", "reason": "3 sentences warm reason ending with 'huh-huh'"}
+               * Do NOT include image URL.`;
+
+        try {
+            const response = await fetch("/api/generate", { 
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ systemInstruction }) 
+            });
+
+            if (!response.ok) throw new Error("Server Error");
+
+            const data = await response.json();
+            const aiContent = data.choices ? data.choices[0].message.content : JSON.stringify(data);
+            const result = JSON.parse(aiContent);
+            
+            location.replace(`result.html?t=${encodeURIComponent(result.title)}&a=${encodeURIComponent(result.artist)}&r=${encodeURIComponent(result.reason)}&w=${encodeURIComponent(userWish)}&img=${encodeURIComponent(result.img_url)}`);
+
+        } catch (error) { 
+            console.error(error);
+            alert("오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            location.href = 'index.html'; 
+        }
+    }
+</script>
