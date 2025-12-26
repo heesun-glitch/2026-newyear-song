@@ -60,43 +60,19 @@
                 gtag('event', 'ai_request', { 'search_term': userKeyword, 'user_wish': userWish }); 
             }
 
-            // ★★★ 핵심: 소원 분석 및 가사/제목 우선순위 로직 적용 ★★★
+            // 프롬프트: 소원과 키워드만 전달하면 됨 (나머지는 백엔드가 처리)
             let systemInstruction = isKorean 
-                ? `너는 소원을 분석해서 '새해 운명의 노래'를 점지해주는 AI야.
+                ? `사용자 정보:
+                   - 키워드: "${userKeyword}"
+                   - 소원: "${userWish}"
                    
-                   [분석 대상]
-                   1. 키워드: "${userKeyword}"
-                   2. 소원: "${userWish}"
+                   이 사용자의 소원이 2026년에 이루어졌을 때의 감정을 분석해주세요.
+                   그리고 제공된 노래 리스트 중에서 가장 적합한 노래를 골라주세요.`
+                : `User Info:
+                   - Keyword: "${userKeyword}"
+                   - Wish: "${userWish}"
                    
-                   [추천 로직 (반드시 순서대로 수행)]
-                   1단계: 사용자의 소원을 깊이 해석해라. (이 소원이 이루어지면 어떤 기분일지, 어떤 상황일지)
-                   2단계: 다음 우선순위에 따라 **한국 노래(Korean Song)** 중에서 딱 하나를 골라라.
-                      - **1순위 (최우선):** 노래의 **'가사'**나 담겨있는 **'의미'**가 소원과 완벽하게 연결되는 곡.
-                      - **2순위 (차선):** 노래의 **'제목'** 자체가 소원을 직관적으로 나타내는 곡. (예: 소원이 '돈' -> '부자 되세요')
-                   
-                   [절대 금지 및 제약 사항]
-                   1. **없는 노래 지어내기 절대 금지.** (멜론/벅스에 있는 실존 음원만 추천)
-                   2. **가수만 보고 대충 추천 금지.** (반드시 노래 자체가 소원과 연관되어야 함)
-                   3. 한국 노래만 추천할 것.
-                   
-                   [답변 형식 (JSON)]
-                   {"title": "정확한노래제목", "artist": "가수이름", "reason": "이 노래의 [가사/제목]이 당신의 소원과 어떻게 연결되는지 설명 (따뜻한 해요체, '허허'로 마무리)"}
-                   * 이미지 URL 포함 금지.` 
-            : `You are a Destiny DJ based on user's wish.
-               [Mission]
-               Analyze the wish "${userWish}" and recommend ONE **Real Korean Song**.
-               
-               [Priority Logic]
-               1. Priority: Match the **Lyrics/Meaning** of the song to the wish.
-               2. Priority: Match the **Title** of the song to the wish.
-               
-               [Strict Rules]
-               1. **Real Songs Only.** Do not hallucinate.
-               2. **Korean Songs Only.**
-               
-               [Format (JSON)]
-               {"title": "Title", "artist": "Artist", "reason": "Reason (Warm tone, end with 'huh-huh')"}
-               * No image URL.`;
+                   Analyze the emotion of this wish. Pick the best song from the provided database.`;
 
             try {
                 const response = await fetch("/api/generate", { 
