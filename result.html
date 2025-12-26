@@ -17,7 +17,6 @@
     
     <style>
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
-        /* [요청] 상단 연한 노란색 그라데이션 적용 */
         .container { width: 100%; max-width: 430px; min-height: 100vh; height: auto; background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 20%, #000000 40%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px 40px 20px; box-sizing: border-box; }
         .header { width: 100%; height: 60px; display: flex; align-items: center; margin-top: 10px; flex-shrink: 0; }
         .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; }
@@ -33,25 +32,16 @@
         .reason-text { font-size: 14px; line-height: 1.6; color: #dddddd; margin: 0; }
         .btn-group { display: flex; gap: 10px; width: 100%; margin-bottom: 20px; }
         .action-btn { flex: 1; padding: 16px 0; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); }
-        .action-btn:active { transform: scale(0.98); }
         .btn-copy { background-color: #F5F5F5; color: #000000; }
         .btn-save { background-color: #FFE173; color: #000000; }
-        .retry-area { text-align: center; padding-bottom: 0; }
+        .retry-area { text-align: center; }
         .retry-link { color: #555555; text-decoration: underline; font-size: 16px; cursor: pointer; }
-        .notice-area { margin-top: 32px; padding-bottom: 20px; color: #555555; font-size: 14px; text-align: left; }
-        .notice-header { display: flex; align-items: center; margin-bottom: 8px; }
-        .notice-header img { width: 18px; height: 18px; margin-right: 4px; }
-        .notice-header span { font-weight: 700; }
+        .notice-area { margin-top: 32px; padding-bottom: 20px; color: #555555; font-size: 13px; text-align: left; }
         .notice-list { margin: 0; padding-left: 20px; line-height: 1.6; }
-        .notice-list li { margin-bottom: 4px; }
-        /* 이메일 푸터 스타일 */
         .contact-area { padding-bottom: 60px; text-align: center; font-size: 12px; color: #444444; }
         .contact-area a { color: #555555; text-decoration: none; margin-left: 4px; }
-        /* 모바일용 이미지 저장 유도 모달 */
         #resultModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        #resultModal img { max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 0 20px rgba(255,225,115,0.3); }
-        #resultModal p { color: #FFE173; font-size: 18px; font-weight: 700; margin-top: 20px; text-align: center; }
-        #closeModal { margin-top: 20px; background: white; color: black; border: none; padding: 10px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        #resultModal img { max-width: 100%; max-height: 70vh; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -59,50 +49,41 @@
         <div class="header" data-html2canvas-ignore="true">
             <button class="back-btn" onclick="location.href='index.html'"><img src="arrow-left.svg" alt="Back"></button>
         </div>
-
-        <div class="page-title"><h2 id="pageTitleText">2026년 나만의 새해 첫 곡</h2></div>
-
+        <div class="page-title"><h2>2026년 나만의 새해 첫 곡</h2></div>
         <div class="album-cover">
-            <img id="albumImg" src="" crossorigin="anonymous" referrerpolicy="no-referrer">
+            <img id="albumImg" alt="album cover">
         </div>
-
         <div class="song-info">
             <h3 class="song-title" id="songTitle"></h3>
             <p class="artist-name" id="artistName"></p>
         </div>
-
-        <div class="reason-box" id="lastCaptureElement">
+        <div class="reason-box">
             <p class="reason-text" id="reasonText"></p>
         </div>
-
         <div class="btn-group" data-html2canvas-ignore="true">
             <button class="action-btn btn-copy" id="btnCopy" onclick="copyLink()">링크 복사하기</button>
             <button class="action-btn btn-save" id="btnSave" onclick="saveImageOrShare()">이미지 저장하기</button>
         </div>
-
         <div class="retry-area" data-html2canvas-ignore="true">
-            <a onclick="location.href='index.html'" class="retry-link" id="btnRetry">다시하기</a>
+            <a onclick="location.href='index.html'" class="retry-link">다시하기</a>
         </div>
-
         <div class="notice-area" data-html2canvas-ignore="true">
-            <div class="notice-header"><img src="info.png" alt="info"><span>유의사항</span></div>
             <ul class="notice-list">
                 <li>본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.</li>
                 <li>제공된 앨범 커버 및 음원 데이터의 출처는 Apple Music입니다.</li>
                 <li>추천된 노래와 앨범 커버 이미지는 정보를 식별하기 위한 최소한의 보조 자료로만 활용됩니다.</li>
-                <li>본 서비스가 제공하는 추천 사유 및 해석은 인공지능(AI)이 사용자의 입력값을 바탕으로 생성된 주관적인 내용입니다.</li>
+                <li>본 서비스의 결과는 AI가 생성한 주관적인 내용입니다.</li>
             </ul>
         </div>
-
         <div class="contact-area" data-html2canvas-ignore="true">
             Contact:<a href="mailto:gmltjs1360@gmail.com">gmltjs1360@gmail.com</a>
         </div>
     </div>
 
     <div id="resultModal" data-html2canvas-ignore="true">
-        <img id="generatedImage" src="" alt="Result">
-        <p>이미지를 꾹 눌러서<br>갤러리에 저장하세요!</p>
-        <button id="closeModal" onclick="document.getElementById('resultModal').style.display='none'">닫기</button>
+        <img id="generatedImage">
+        <p style="color:#FFE173; font-weight:700; margin-top:20px; text-align:center;">이미지를 꾹 눌러서 저장하세요!</p>
+        <button onclick="document.getElementById('resultModal').style.display='none'" style="margin-top:20px; padding:10px 30px; border-radius:20px; border:none; font-weight:bold;">닫기</button>
     </div>
 
     <script>
@@ -111,39 +92,54 @@
         const userAgent = navigator.userAgent.toLowerCase();
         const isInApp = userAgent.includes('naver') || userAgent.includes('kakao') || userAgent.includes('instagram');
 
-        const i18n = {
-            ko: { share: "공유하기", alertCopy: "링크가 복사되었습니다.", alertError: "이미지 생성 중 오류가 발생했습니다." },
-            en: { share: "Share", alertCopy: "Link copied to clipboard.", alertError: "Error occurred while creating image." }
-        };
-
         window.onload = function() {
-            const lang = isKorean ? i18n.ko : i18n.en;
-            
-            // [모바일 최적화] 링크 복사 제거 및 텍스트 변경 로직 유지
+            // [모바일 대응] 버튼 텍스트 및 노출 설정
             if (navigator.share || isInApp) {
                 document.getElementById('btnCopy').style.display = 'none';
-                document.getElementById('btnSave').innerText = lang.share;
+                document.getElementById('btnSave').innerText = isKorean ? "공유하기" : "Share";
             }
 
-            document.getElementById('songTitle').innerText = urlParams.get('t');
-            document.getElementById('artistName').innerText = urlParams.get('a');
-            document.getElementById('reasonText').innerHTML = `"${urlParams.get('w')}"<br>${urlParams.get('r')}`;
-            
-            const imgUrl = urlParams.get('img');
-            document.getElementById('albumImg').src = imgUrl ? `https://wsrv.nl/?url=${encodeURIComponent(imgUrl)}&output=jpg` : "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=600&auto=format&fit=crop";
+            // 텍스트 데이터 세팅
+            document.getElementById('songTitle').innerText = urlParams.get('t') || "";
+            document.getElementById('artistName').innerText = urlParams.get('a') || "";
+            document.getElementById('reasonText').innerHTML = `"${urlParams.get('w') || ""}"<br>${urlParams.get('r') || ""}`;
+
+            // [핵심] 앨범 이미지 로드 및 보안 우회 로직
+            const albumImg = document.getElementById('albumImg');
+            const rawImgUrl = urlParams.get('img');
+            const DEFAULT_IMG = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=600&auto=format&fit=crop";
+
+            if (rawImgUrl) {
+                // 이미지 캡처를 위한 보안 설정
+                albumImg.crossOrigin = "anonymous";
+                albumImg.referrerPolicy = "no-referrer";
+
+                // 이중 프록시 설정
+                const proxy1 = `https://wsrv.nl/?url=${encodeURIComponent(rawImgUrl)}&output=jpg&noretina=1`;
+                const proxy2 = `https://images.weserv.nl/?url=${encodeURIComponent(rawImgUrl)}`;
+
+                albumImg.src = proxy1;
+                albumImg.onerror = function() {
+                    this.src = proxy2; // 첫 번째 프록시 실패 시 두 번째 사용
+                    this.onerror = function() {
+                        this.src = DEFAULT_IMG; // 둘 다 실패 시 기본 이미지
+                    };
+                };
+            } else {
+                albumImg.src = DEFAULT_IMG;
+            }
         };
 
         function copyLink() {
-            navigator.clipboard.writeText(window.location.href).then(() => alert(isKorean ? i18n.ko.alertCopy : i18n.en.alertCopy));
+            navigator.clipboard.writeText(window.location.href).then(() => alert(isKorean ? "복사되었습니다." : "Copied."));
         }
 
         async function saveImageOrShare() {
-            const captureElement = document.getElementById('captureArea');
+            const captureArea = document.getElementById('captureArea');
             try {
-                const canvas = await html2canvas(captureElement, { useCORS: true, scale: 2 });
+                const canvas = await html2canvas(captureArea, { useCORS: true, scale: 2, backgroundColor: "#000000" });
                 const imgData = canvas.toDataURL('image/png');
 
-                // [공유 바텀시트 로직] 모바일/인앱 환경 대응
                 if (navigator.share && !isInApp) {
                     canvas.toBlob(async (blob) => {
                         const file = new File([blob], "2026_NewYear_Song.png", { type: "image/png" });
@@ -152,12 +148,11 @@
                         } catch (e) { console.error(e); }
                     }, 'image/png');
                 } else {
-                    // 인앱이나 공유 미지원 시 이미지 모달 노출
                     document.getElementById('generatedImage').src = imgData;
                     document.getElementById('resultModal').style.display = 'flex';
                 }
             } catch (err) {
-                alert(isKorean ? i18n.ko.alertError : i18n.en.alertError);
+                alert(isKorean ? "오류가 발생했습니다." : "Error occurred.");
             }
         }
     </script>
