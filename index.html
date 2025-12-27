@@ -23,12 +23,14 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
-        /* 1. 브라우저 바깥 영역은 무조건 검은색 (노란 띠 방지 핵심) */
         html, body { 
             margin: 0; 
             padding: 0; 
-            background-color: #000000 !important; 
             height: 100%;
+            /* 배경색 강제 지정 삭제하여 그라데이션이 보이도록 수정 */
+            background-color: #000000;
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
+            color: white; 
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
@@ -36,8 +38,6 @@
         body { 
             display: flex; 
             justify-content: center; 
-            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
-            color: white; 
         }
         
         @keyframes slideIn {
@@ -49,7 +49,7 @@
             width: 100%; 
             max-width: 430px; 
             min-height: 100vh; 
-            /* 2. 콘텐츠 영역 내부에만 그라데이션 복구 */
+            /* 요청하신 노란색 그라데이션 복구 */
             background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%); 
             margin: 0 auto; 
             position: relative; 
@@ -77,10 +77,10 @@
             display: block; 
         }
         
-        /* 3. 버튼 고정 및 위치 설정 */
+        /* 버튼 위치 고정 및 스타일 */
         .button-area { 
-            position: fixed; /* 스크롤 상관없이 고정 */
-            /* 화면 하단에서 40px + 아이폰 하단 바 공간(safe-area)만큼 띄움 */
+            position: fixed; 
+            /* 화면 최하단 기준 40px 위로 고정 (아이폰 하단 바 영역 고려) */
             bottom: calc(40px + env(safe-area-inset-bottom)); 
             left: 50%; 
             transform: translateX(-50%); 
