@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 새해 첫 곡 - 키워드 선택</title>
     
+    <meta name="theme-color" content="#000000" />
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -22,20 +24,21 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* [수정] 배경 렌더링 오류 수정 */
         .container { 
             width: 100%; 
             max-width: 430px; 
             
-            /* 모바일 브라우저 주소창 대응을 위해 dvh 추가 */
+            /* 모바일 브라우저 주소창 높이 변화 대응 */
             min-height: 100vh; 
             min-height: 100dvh;
             
-            /* 배경 그라디언트 */
+            /* 배경 그라디언트 설정 */
             background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%);
             
-            /* [수정 완료] 노란색 잔상을 유발하던 background-attachment: fixed 제거 */
+            /* [핵심 2] 배경 반복 방지 (노란색이 바닥에 다시 나오는 것 차단) */
             background-repeat: no-repeat;
+            
+            /* 주의: background-attachment: fixed; 는 삭제된 상태 유지 */
             
             margin: 0 auto; 
             position: relative; 
@@ -74,7 +77,6 @@
         .next-btn:active { transform: scale(0.98); }
         .next-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
     </style>
-    <meta name="theme-color" content="#000000" />
 </head>
 <body>
     <div class="container">
