@@ -22,17 +22,20 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* [수정] 배경 반복 방지 및 고정 속성 추가 */
+        /* [수정] 배경 렌더링 오류 수정 */
         .container { 
             width: 100%; 
             max-width: 430px; 
+            
+            /* 모바일 브라우저 주소창 대응을 위해 dvh 추가 */
             min-height: 100vh; 
+            min-height: 100dvh;
+            
             /* 배경 그라디언트 */
             background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%);
-            /* 핵심 수정: 배경이 스크롤에 따라 움직이거나 반복되지 않도록 고정 */
-            background-attachment: fixed;
+            
+            /* [수정 완료] 노란색 잔상을 유발하던 background-attachment: fixed 제거 */
             background-repeat: no-repeat;
-            background-size: cover;
             
             margin: 0 auto; 
             position: relative; 
