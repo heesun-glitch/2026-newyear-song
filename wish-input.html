@@ -12,22 +12,13 @@
       gtag('config', 'G-J0W132F99N');
     </script>
     <style>
-        /* 수정: 스크롤 가능하게 overflow 제거, x축 넘침 방지 */
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-x: hidden; }
         
-        /* 페이지 진입 애니메이션 정의 */
         @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        /* 수정: 하단 패딩 및 min-height 적용, 애니메이션 추가 */
         .container { 
             width: 100%; 
             max-width: 430px; 
@@ -52,24 +43,24 @@
         .input-wrapper { width: 100%; height: 150px; background-color: transparent; border-radius: 12px; padding: 20px; box-sizing: border-box; position: relative; transition: border-color 0.3s; border: 1px solid #555555; }
         .input-wrapper.filled { border: 1px solid #FFFFFF; }
         .input-wrapper:focus-within { border: 1px solid #FFE173; }
+        
         textarea { width: 100%; height: 80%; background: transparent; border: none; resize: none; color: white; font-size: 16px; line-height: 1.5; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; outline: none; }
         textarea::placeholder { color: #555555; }
+
+        /* 자동 완성 시 노란 배경색 제거 코드 */
+        textarea:-webkit-autofill,
+        textarea:-webkit-autofill:hover, 
+        textarea:-webkit-autofill:focus, 
+        textarea:-webkit-autofill:active {
+            -webkit-text-fill-color: white !important;
+            -webkit-box-shadow: 0 0 0px 1000px #000000 inset !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
         .char-count { position: absolute; bottom: 20px; right: 20px; font-size: 14px; color: #555555; }
         #currentCount { color: #555555; font-weight: 400; transition: color 0.3s; }
         
-        /* 수정: 화면 하단 고정 (Fixed) */
-        .button-area { 
-            position: fixed; 
-            bottom: 40px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            width: 100%; 
-            max-width: 430px; 
-            padding: 0 20px; 
-            box-sizing: border-box; 
-            z-index: 999;
-        }
-        
+        .button-area { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 0 20px; box-sizing: border-box; z-index: 999; }
         .next-btn { width: 100%; padding: 18px 0; background-color: #FFE173; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; color: #000000; cursor: pointer; transition: opacity 0.3s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); }
         .next-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
     </style>
@@ -78,7 +69,10 @@
     <div class="container">
         <div class="header"><button class="back-btn" onclick="location.href='question.html'"><img src="arrow-left.svg" alt="뒤로가기"></button></div>
         <div class="title-area"><h2 id="pageTitle"></h2></div>
-        <div class="input-wrapper" id="inputWrapper"><textarea id="wishInput" oninput="checkInput()"></textarea><div class="char-count"><span id="currentCount">0</span>/30</div></div>
+        <div class="input-wrapper" id="inputWrapper">
+            <textarea id="wishInput" oninput="checkInput()" autocomplete="off"></textarea>
+            <div class="char-count"><span id="currentCount">0</span>/30</div>
+        </div>
         <div class="button-area"><button id="nextBtn" class="next-btn" disabled onclick="saveAndGo()">다음</button></div>
     </div>
     <script>
