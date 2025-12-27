@@ -12,11 +12,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0,
-                   user-scalable=no, viewport-fit=cover">
-
-    <!-- iOS status bar -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <title>2026 새해 첫 곡</title>
 
@@ -28,31 +24,27 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
-        /* =====================
-           RESET & BASE
-        ====================== */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             background: transparent;
-            overscroll-behavior: none;
         }
 
         body {
             font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
             color: #ffffff;
             overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
         }
 
-        /* =====================
-           FIXED BACKGROUND
-        ====================== */
+        /* 배경은 "보이는 화면까지만" */
         .fixed-bg {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100svh; /* 🔥 핵심 */
             background: linear-gradient(
                 180deg,
                 #000000 0%,
@@ -60,31 +52,17 @@
                 #FFE173 100%
             );
             z-index: -1;
-            pointer-events: none;
         }
 
-        /* =====================
-           CONTAINER
-        ====================== */
         .container {
             width: 100%;
             max-width: 430px;
-            min-height: 100svh; /* iOS Safari 대응 */
+            min-height: 100svh;
             margin: 0 auto;
-            padding-bottom: 160px; /* 버튼 공간 확보 */
+            padding-bottom: 140px;
             box-sizing: border-box;
-            position: relative;
-            animation: slideIn 0.5s ease-out forwards;
         }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to   { transform: translateX(0); opacity: 1; }
-        }
-
-        /* =====================
-           CONTENT
-        ====================== */
         .content-top {
             margin-top: 60px;
             padding: 0 20px;
@@ -106,36 +84,29 @@
 
         .main-image {
             width: 100%;
-            flex-grow: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: visible;
         }
 
         .main-image img {
             width: 100%;
-            height: auto;
-            object-fit: cover;
             transform: translateY(100px);
             animation: float 3s ease-in-out infinite;
-            display: block;
         }
 
         @keyframes float {
-            0%   { transform: translateY(100px); }
-            50%  { transform: translateY(80px); }
+            0% { transform: translateY(100px); }
+            50% { transform: translateY(80px); }
             100% { transform: translateY(100px); }
         }
 
-        /* =====================
-           FIXED BUTTON
-        ====================== */
+        /* 버튼은 브라우저 기준 고정 */
         .button-area {
             position: fixed;
             left: 20px;
             right: 20px;
-            bottom: calc(40px + env(safe-area-inset-bottom));
+            bottom: 40px;
             max-width: 390px;
             margin: 0 auto;
             z-index: 9999;
@@ -149,24 +120,14 @@
             border-radius: 12px;
             font-size: 18px;
             font-weight: 700;
-            color: #000000;
-            cursor: pointer;
-            box-shadow:
-                inset 0 6px 4px rgba(255, 255, 255, 0.25),
-                0 4px 15px rgba(0, 0, 0, 0.25);
-        }
-
-        .start-btn:active {
-            transform: scale(0.98);
+            color: #000;
         }
     </style>
 </head>
 
 <body>
-    <!-- Background -->
     <div class="fixed-bg"></div>
 
-    <!-- Content -->
     <div class="container">
         <div class="content-top">
             <h1 id="mainTitle">
@@ -183,7 +144,6 @@
         </div>
     </div>
 
-    <!-- Fixed Button (container 밖) -->
     <div class="button-area">
         <button class="start-btn" id="startBtn"
                 onclick="location.href='question.html'">
@@ -209,10 +169,9 @@
             };
 
             const lang = isKorean ? i18n.ko : i18n.en;
-
-            document.getElementById('mainTitle').innerHTML = lang.title;
-            document.getElementById('subTitle').innerText = lang.subtitle;
-            document.getElementById('startBtn').innerText = lang.btn;
+            mainTitle.innerHTML = lang.title;
+            subTitle.innerText = lang.subtitle;
+            startBtn.innerText = lang.btn;
         };
     </script>
 </body>
