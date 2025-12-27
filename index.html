@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -16,7 +15,6 @@
 
     <title>2026 새해 첫 곡</title>
 
-    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://2026-newyear-song.vercel.app/">
     <meta property="og:title" content="2026년 나만의 새해 첫 곡 찾기">
@@ -28,8 +26,9 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
+            min-height: 100%; /* height: 100%에서 변경하여 전체 길이 허용 */
             background: transparent;
+            position: relative; /* 배경 배치를 위해 추가 */
         }
 
         body {
@@ -38,13 +37,13 @@
             overflow-x: hidden;
         }
 
-        /* 배경은 "보이는 화면까지만" */
+        /* 배경을 전체 영역 끝까지 적용 */
         .fixed-bg {
-            position: fixed;
+            position: absolute; /* fixed에서 변경 */
             top: 0;
             left: 0;
             width: 100%;
-            height: 100svh; /* 🔥 핵심 */
+            height: 100%; /* 100svh에서 변경하여 콘텐츠 전체 덮음 */
             background: linear-gradient(
                 180deg,
                 #000000 0%,
