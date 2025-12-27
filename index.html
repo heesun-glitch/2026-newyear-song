@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -15,6 +16,7 @@
 
     <title>2026 새해 첫 곡</title>
 
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://2026-newyear-song.vercel.app/">
     <meta property="og:title" content="2026년 나만의 새해 첫 곡 찾기">
@@ -26,39 +28,30 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            min-height: 100%; /* height: 100%에서 변경하여 전체 길이 허용 */
-            background: transparent;
-            position: relative; /* 배경 배치를 위해 추가 */
         }
 
+        /* 🔥 배경을 body에 직접 적용 */
         body {
+            min-height: 100vh;
             font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
             color: #ffffff;
             overflow-x: hidden;
-        }
 
-        /* 배경을 전체 영역 끝까지 적용 */
-        .fixed-bg {
-            position: absolute; /* fixed에서 변경 */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%; /* 100svh에서 변경하여 콘텐츠 전체 덮음 */
             background: linear-gradient(
                 180deg,
                 #000000 0%,
                 #1a1a1a 40%,
                 #FFE173 100%
             );
-            z-index: -1;
+            background-repeat: no-repeat;
+            background-attachment: scroll;
         }
 
         .container {
             width: 100%;
             max-width: 430px;
-            min-height: 100svh;
             margin: 0 auto;
-            padding-bottom: 140px;
+            padding-bottom: 140px; /* 버튼 공간 */
             box-sizing: border-box;
         }
 
@@ -100,7 +93,7 @@
             100% { transform: translateY(100px); }
         }
 
-        /* 버튼은 브라우저 기준 고정 */
+        /* 버튼 고정 */
         .button-area {
             position: fixed;
             left: 20px;
@@ -125,8 +118,6 @@
 </head>
 
 <body>
-    <div class="fixed-bg"></div>
-
     <div class="container">
         <div class="content-top">
             <h1 id="mainTitle">
