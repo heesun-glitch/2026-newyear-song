@@ -72,7 +72,6 @@ const SONG_DATABASE = [
     { id: 65, title: "주인공", artist: "선미", tags: "주인공, 드라마, 이별, 독기" },
     { id: 66, title: "Youth", artist: "기현 (몬스타엑스)", tags: "청춘, 여행, 자유, 락" },
     { id: 67, title: "00:00 (Zero O'Clock)", artist: "방탄소년단", tags: "자정, 리셋, 새로운시작, 위로, 내일" },
-
     // [SECTION 2: 기존 인기곡 (K-POP & 발라드 추가)]
     { id: 68, title: "Supernova", artist: "aespa", tags: "강렬함, 변화, 폭발적 에너지, 미래, 혁신" },
     { id: 69, title: "Hype Boy", artist: "NewJeans", tags: "설렘, 트렌디, 청량, 기분전환, 시작" },
@@ -177,7 +176,6 @@ const SONG_DATABASE = [
     { id: 168, title: "응급실", artist: "izi", tags: "노래방, 떼창, 락발라드, 사랑" },
     { id: 169, title: "소주 한 잔", artist: "임창정", tags: "술, 이별, 아재감성, 레전드" },
     { id: 170, title: "가시", artist: "버즈", tags: "락발라드, 떼창, 노래방, 추억" },
-
     // [SECTION 3: 글로벌 POP 명곡 (K-POP 외 선택지)]
     { id: 171, title: "Viva La Vida", artist: "Coldplay", tags: "인생, 웅장함, 역사, 새출발, 왕" },
     { id: 172, title: "I Don't Think That I Like Her", artist: "Charlie Puth", tags: "설렘, 짝사랑, 경쾌함, 팝" },
@@ -222,31 +220,41 @@ export default async function handler(req) {
     }
 
     try {
-        const { systemInstruction } = await req.json(); 
+        // [수정] 프론트엔드에서 { keyword, wish } 데이터 수신
+        const { keyword, wish } = await req.json(); 
         const apiKey = process.env.OPENAI_API_KEY;
 
         if (!apiKey) {
             return new Response(JSON.stringify({ error: "API Key not configured" }), { status: 500 });
         }
 
+        // DB 전체를 문자열로 변환 (AI에게 제공용)
         const dbString = JSON.stringify(SONG_DATABASE.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
         
+        // 프롬프트: DB 내에서 태그 매칭을 통해 1곡 선정
         const finalPrompt = `
-        ${systemInstruction}
+        Role: Music Recommendation Expert.
         
-        [보유 중인 노래 리스트 (Database)]
+        [User Data]
+        - Keyword: "${keyword}"
+        - Wish: "${wish}"
+
+        [Song Database]
         ${dbString}
 
-        [미션]
-        위 리스트(Database)에 있는 노래 중에서 사용자의 소원과 가장 잘 어울리는 노래 하나를 선택하세요.
+        [Mission]
+        Analyze the user's wish and keyword, then select the ONE song from the [Song Database] that best matches the mood.
         
-        [규칙]
-        1. **반드시 위 리스트에 있는 노래 중에서만 골라야 합니다.**
-        2. tags와 제목을 보고 소원의 분위기(희망, 사랑, 성공, 돈, 나이, 위로 등)와 가장 가까운 것을 매칭하세요.
-        3. 답변은 오직 선택한 노래의 **ID 번호(id)**와 **추천 이유(reason)**만 JSON으로 반환하세요.
+        [Rules]
+        1. YOU MUST PICK FROM THE DATABASE. Do not invent songs.
+        2. Look at the "tags" in the database. Match the user's wish emotion with the song's tags.
+        3. Output ONLY JSON format.
         
-        [JSON 형식]
-        { "id": 숫자, "reason": "추천 이유 3문장 (따뜻한 해요체, '허허'로 끝냄)" }
+        [Output Format]
+        { 
+            "id": (number of the selected song), 
+            "reason": "Write a warm, encouraging reason in Korean (honorifics/해요체). Max 2 sentences." 
+        }
         `;
 
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -258,33 +266,40 @@ export default async function handler(req) {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [{ role: "user", content: finalPrompt }],
-                temperature: 0.5,
+                temperature: 0.7, 
                 response_format: { type: "json_object" }
             })
         });
 
         const data = await response.json();
-        const aiSelection = JSON.parse(data.choices[0].message.content);
+        
+        // AI 응답 파싱
+        let aiSelection;
+        try {
+            aiSelection = JSON.parse(data.choices[0].message.content);
+        } catch (e) {
+            // 실패 시 랜덤
+            const randomId = Math.floor(Math.random() * SONG_DATABASE.length) + 1;
+            aiSelection = { id: randomId, reason: "당신의 소원이 꼭 이뤄지길 바라는 마음으로 골랐어요." };
+        }
 
         // ID로 노래 찾기
         let selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
-
         if (!selectedSong) {
-            console.error("AI returned invalid ID, fallback to ID 1");
             selectedSong = SONG_DATABASE[0];
         }
 
-        // 결과 생성
+        // 결과 생성 (기본 이미지 포함)
         let result = {
             title: selectedSong.title,
             artist: selectedSong.artist,
             reason: aiSelection.reason,
-            img_url: ""
+            img_url: "record.png" 
         };
 
-        // 이미지 검색
-        const query = `artist:"${selectedSong.artist}" track:"${selectedSong.title}"`;
+        // 이미지 검색 (엄격 -> 느슨 -> 실패 시 record.png 유지)
         try {
+            const query = `artist:"${selectedSong.artist}" track:"${selectedSong.title}"`;
             let searchRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`);
             let searchData = await searchRes.json();
             
@@ -297,7 +312,9 @@ export default async function handler(req) {
                     result.img_url = looseData.data[0].album.cover_xl;
                 }
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error("Deezer API Error:", e);
+        }
 
         return new Response(JSON.stringify({
             choices: [{ message: { content: JSON.stringify(result) } }]
