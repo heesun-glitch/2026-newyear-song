@@ -12,7 +12,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <title>2026 새해 첫 곡</title>
 
     <meta property="og:type" content="website">
@@ -22,14 +21,12 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
-        /* [핵심 1] 배경 투명화 및 확장 설정 */
+        /* [수정 1] html, body에서 배경 그라데이션 제거 */
         html {
             height: 100%;
             margin: 0;
             padding: 0;
-            /* html에도 그라데이션을 주어 주소창 뒤로 배경이 비치게 함 */
-            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%) no-repeat fixed;
-            background-size: cover;
+            background-color: #000000; /* 로딩 전 깜빡임 방지용 검정 */
         }
 
         body { 
@@ -39,11 +36,27 @@
             min-height: 100%;
             font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
             color: white; 
-            background: transparent; /* body는 투명하게 하여 html 배경을 보여줌 */
+            background: transparent; 
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             display: flex; 
             justify-content: center; 
+        }
+
+        /* [핵심 해결책] 배경 전용 고정 레이어 추가 
+           - 스크롤이나 주소창 변화에도 배경이 절대 움직이거나 깨지지 않음
+        */
+        .fixed-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%; /* 화면 전체를 덮음 */
+            z-index: -1; /* 컨텐츠 뒤로 보냄 */
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%);
+            background-size: cover;
+            /* iOS 사파리 튀는 현상 방지 */
+            will-change: transform; 
         }
 
         @keyframes slideIn {
@@ -61,7 +74,6 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            /* 버튼에 가려지지 않도록 하단 여백 충분히 확보 */
             padding: 0 0 140px 0; 
             box-sizing: border-box; 
             animation: slideIn 0.5s ease-out forwards;
@@ -91,10 +103,9 @@
             display: block; 
         }
         
-        /* [핵심 2] 버튼 고정 위치 (Viewport 기준) */
+        /* 버튼 위치 고정 및 스타일 유지 */
         .button-area { 
             position: fixed; 
-            /* 화면 최하단에서 40px + 아이폰 하단 바(Safe Area)만큼 위로 */
             bottom: calc(40px + env(safe-area-inset-bottom)); 
             left: 50%; 
             transform: translateX(-50%); 
@@ -104,10 +115,9 @@
             box-sizing: border-box; 
             z-index: 9999; 
             background: transparent; 
-            pointer-events: none; /* 빈 공간 클릭 시 뒤에 있는 컨텐츠가 눌리도록 */
+            pointer-events: none; 
         }
         
-        /* [핵심 3] 버튼 스타일 & 쉐도우 (Figma 값 적용) */
         .start-btn { 
             width: 100%; 
             padding: 18px 0; 
@@ -120,10 +130,6 @@
             cursor: pointer; 
             transition: transform 0.1s; 
             pointer-events: auto; 
-            
-            /* Inner Shadow: X:0, Y:6, Blur:4, Color: #FFFFFF 25% 
-               Drop Shadow:  X:0, Y:4, Blur:15, Color: #000000 25% 
-            */
             box-shadow: 
                 inset 0 6px 4px rgba(255, 255, 255, 0.25), 
                 0 4px 15px rgba(0, 0, 0, 0.25);
@@ -138,6 +144,7 @@
     </style>
 </head>
 <body>
+    <div class="fixed-bg"></div>
 
     <div class="container">
         <div class="content-top">
