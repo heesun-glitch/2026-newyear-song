@@ -17,36 +17,63 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
+        /* [수정] 배경 렌더링 최적화: dvh 사용 및 fixed 제거 */
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
-        .container { width: 100%; max-width: 430px; min-height: 100vh; height: auto; background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 20%, #000000 40%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px 40px 20px; box-sizing: border-box; }
+        
+        .container { 
+            width: 100%; 
+            max-width: 430px; 
+            min-height: 100vh; 
+            min-height: 100dvh; /* 모바일 주소창 대응 */
+            height: auto; 
+            
+            /* 배경 고정(fixed) 제거됨 -> 스크롤 시 잔상 해결 */
+            background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 20%, #000000 40%);
+            background-repeat: no-repeat;
+            
+            margin: 0 auto; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 0 20px 40px 20px; 
+            box-sizing: border-box; 
+        }
+        
         .header { width: 100%; height: 60px; display: flex; align-items: center; margin-top: 10px; flex-shrink: 0; }
         .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; }
         .back-btn img { width: 48px; height: 48px; display: block; }
         
-        /* 타이틀과 QR 배치를 위한 플렉스 박스 */
         .page-title { margin-top: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .page-title h2 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; white-space: nowrap; }
         
-        /* QR 코드 영역 (기본적으로 화면에서 보이지 않음) */
+        /* QR 코드 영역 (캡쳐용) */
         #qr-wrapper { display: none; background: white; padding: 5px; border-radius: 8px; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(255,225,115,0.3); }
         
         .album-cover { width: 100%; height: 0; padding-bottom: 100%; position: relative; background-color: transparent; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
         .album-cover img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+        
         .song-info { margin-bottom: 20px; }
         .song-title { font-size: 20px; font-weight: 800; margin: 0 0 5px 0; }
         .artist-name { font-size: 16px; color: #aaaaaa; margin: 0; font-weight: 400; }
+        
         .reason-box { width: 100%; background-color: #282828; border-radius: 12px; padding: 20px; box-sizing: border-box; margin-bottom: 30px; }
         .reason-text { font-size: 14px; line-height: 1.6; color: #dddddd; margin: 0; }
+        
         .btn-group { display: flex; gap: 10px; width: 100%; margin-bottom: 20px; }
         .action-btn { flex: 1; padding: 16px 0; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: transform 0.1s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); }
         .btn-copy { background-color: #F5F5F5; color: #000000; }
         .btn-save { background-color: #FFE173; color: #000000; }
+        
         .retry-area { text-align: center; }
         .retry-link { color: #555555; text-decoration: underline; font-size: 16px; cursor: pointer; }
+        
         .notice-area { margin-top: 32px; padding-bottom: 20px; color: #555555; font-size: 13px; text-align: left; }
         .notice-list { margin: 0; padding-left: 20px; line-height: 1.6; }
+        
         .contact-area { padding-bottom: 60px; text-align: center; font-size: 12px; color: #444444; }
         .contact-area a { color: #555555; text-decoration: none; margin-left: 4px; }
+        
+        /* 모달 (PC에서는 사용 안 함, 인앱 브라우저 등 예외 상황용) */
         #resultModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         #resultModal img { max-width: 100%; max-height: 70vh; border-radius: 12px; }
     </style>
@@ -74,10 +101,12 @@
         <div class="reason-box">
             <p class="reason-text" id="reasonText"></p>
         </div>
+        
         <div class="btn-group" data-html2canvas-ignore="true">
             <button class="action-btn btn-copy" id="btnCopy" onclick="copyLink()">링크 복사하기</button>
             <button class="action-btn btn-save" id="btnSave" onclick="saveImageOrShare()">이미지 저장하기</button>
         </div>
+        
         <div class="retry-area" data-html2canvas-ignore="true">
             <a onclick="retryService()" class="retry-link">다시하기</a>
         </div>
@@ -104,12 +133,24 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isKorean = navigator.language.includes('ko');
         const userAgent = navigator.userAgent.toLowerCase();
+        
+        // [수정] 모바일 기기 정밀 체크
+        const isMobile = /android|iphone|ipad|ipod/i.test(userAgent);
         const isInApp = userAgent.includes('naver') || userAgent.includes('kakao') || userAgent.includes('instagram');
 
         window.onload = function() {
-            if (navigator.share || isInApp) {
-                document.getElementById('btnCopy').style.display = 'none';
-                document.getElementById('btnSave').innerText = isKorean ? "공유하기" : "Share";
+            // [수정] UI 분기 로직: 모바일 vs PC
+            const btnCopy = document.getElementById('btnCopy');
+            const btnSave = document.getElementById('btnSave');
+
+            if (isMobile) {
+                // 모바일: 링크복사 버튼 숨김, 저장 버튼을 '공유하기'로 변경
+                btnCopy.style.display = 'none';
+                btnSave.innerText = isKorean ? "공유하기" : "Share";
+            } else {
+                // PC: 버튼 2개 모두 표시 (기본 HTML 상태)
+                btnCopy.style.display = 'block';
+                btnSave.innerText = isKorean ? "이미지 저장하기" : "Save Image";
             }
 
             const title = urlParams.get('t') || "";
@@ -160,7 +201,7 @@
             if (typeof gtag === 'function') {
                 gtag('event', 'click_copy_link', { 'event_category': 'Engagement' });
             }
-            navigator.clipboard.writeText(window.location.href).then(() => alert(isKorean ? "복사되었습니다." : "Copied."));
+            navigator.clipboard.writeText(window.location.href).then(() => alert(isKorean ? "링크가 복사되었습니다." : "Copied."));
         }
 
         function retryService() {
@@ -172,12 +213,12 @@
 
         async function saveImageOrShare() {
             const captureArea = document.getElementById('captureArea');
-            const qrWrapper = document.getElementById('qr-wrapper'); // QR 영역 가져오기
+            const qrWrapper = document.getElementById('qr-wrapper'); 
             
             if (typeof gtag === 'function') {
                 gtag('event', 'click_share_or_save', { 
                     'event_category': 'Engagement',
-                    'method': (navigator.share && !isInApp) ? 'Native Share' : 'Modal Save'
+                    'method': (isMobile) ? 'Mobile Share' : 'PC Download'
                 });
             }
 
@@ -192,24 +233,37 @@
                     allowTaint: false
                 });
 
-                // 캡처 완료 후 다시 숨기기
+                // 캡처 완료 후 QR 영역 다시 숨기기
                 qrWrapper.style.display = 'none';
 
-                const imgData = canvas.toDataURL('image/png');
-
-                if (navigator.share && !isInApp) {
-                    canvas.toBlob(async (blob) => {
-                        const file = new File([blob], "2026_NewYear_Song.png", { type: "image/png" });
-                        try {
-                            await navigator.share({ files: [file], title: "2026 새해 첫 곡" });
-                        } catch (e) { console.error(e); }
-                    }, 'image/png');
+                // [수정] 동작 로직: 모바일(공유) vs PC(다운로드)
+                if (isMobile) {
+                    // 모바일 동작
+                    if (navigator.share && !isInApp) {
+                        canvas.toBlob(async (blob) => {
+                            const file = new File([blob], "2026_NewYear_Song.png", { type: "image/png" });
+                            try {
+                                await navigator.share({ files: [file], title: "2026 새해 첫 곡" });
+                            } catch (e) { console.error(e); }
+                        }, 'image/png');
+                    } else {
+                        // 인앱 브라우저 등 navigator.share 불가 시 모달 띄우기 (꾹 눌러 저장)
+                        const imgData = canvas.toDataURL('image/png');
+                        document.getElementById('generatedImage').src = imgData;
+                        document.getElementById('resultModal').style.display = 'flex';
+                    }
                 } else {
-                    document.getElementById('generatedImage').src = imgData;
-                    document.getElementById('resultModal').style.display = 'flex';
+                    // PC 동작: 모달 없이 바로 다운로드 트리거
+                    const link = document.createElement("a");
+                    link.download = "2026_NewYear_Song.png";
+                    link.href = canvas.toDataURL("image/png");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                 }
+
             } catch (err) {
-                qrWrapper.style.display = 'none'; // 에러 시에도 숨기기
+                qrWrapper.style.display = 'none'; 
                 console.error(err);
                 alert(isKorean ? "이미지 생성 오류" : "Error");
             }
