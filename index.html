@@ -10,7 +10,10 @@
     </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <title>2026 새해 첫 곡</title>
 
     <meta property="og:type" content="website">
@@ -20,16 +23,20 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
-        body { 
+        /* 기본 배경을 강한 검정으로 설정 */
+        html, body { 
             margin: 0; 
             padding: 0; 
-            background-color: #000000; 
-            min-height: 100vh; 
+            background-color: #000000 !important; 
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body { 
             display: flex; 
             justify-content: center; 
             font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
             color: white; 
-            overflow-x: hidden; 
         }
         
         @keyframes slideIn {
@@ -41,7 +48,7 @@
             width: 100%; 
             max-width: 430px; 
             min-height: 100vh; 
-            /* 하단 노란색 그라데이션 삭제 후 검정색 유지 */
+            /* 배경 그라데이션 완전 삭제 및 검정색 고정 */
             background: #000000; 
             margin: 0 auto; 
             position: relative; 
@@ -92,7 +99,7 @@
             color: #000000; 
             cursor: pointer; 
             transition: transform 0.1s; 
-            box-shadow: 0 4px 10px rgba(255, 225, 115, 0.3); 
+            box-shadow: 0 4px 15px rgba(255, 225, 115, 0.2); 
         }
         .start-btn:active { transform: scale(0.98); }
 
@@ -139,15 +146,6 @@
             document.getElementById('mainTitle').innerHTML = lang.title;
             document.getElementById('subTitle').innerText = lang.subtitle;
             document.getElementById('startBtn').innerText = lang.btn;
-
-            document.getElementById('startBtn').addEventListener('click', function() {
-                if (typeof gtag === 'function') {
-                    gtag('event', 'click_start', {
-                        'event_category': 'Engagement',
-                        'event_label': 'Start Button'
-                    });
-                }
-            });
         };
     </script>
 </body>
