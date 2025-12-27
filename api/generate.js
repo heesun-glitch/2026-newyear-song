@@ -2,9 +2,9 @@ export const config = {
     runtime: 'edge',
 };
 
-// ★★★ 최종 통합 데이터베이스 (Youtube 리스트 + 기존 명곡 = 총 205곡) ★★★
+// ★★★ 최종 통합 데이터베이스 (총 205곡) ★★★
 const SONG_DATABASE = [
-    // [SECTION 1: 유튜브 새해 국룰 리스트 (우선순위 높음)]
+    // [SECTION 1: 유튜브 새해 국룰 리스트]
     { id: 1, title: "Welcome to the Show", artist: "DAY6 (데이식스)", tags: "시작, 무대, 주인공, 벅참, 환영" },
     { id: 2, title: "Live My Life", artist: "aespa", tags: "자유, 나만의 길, 여행, 팝펑크, 욜로" },
     { id: 3, title: "한 페이지가 될 수 있게", artist: "DAY6 (데이식스)", tags: "청춘, 기록, 아름다운 순간, 벅참" },
@@ -72,7 +72,6 @@ const SONG_DATABASE = [
     { id: 65, title: "주인공", artist: "선미", tags: "주인공, 드라마, 이별, 독기" },
     { id: 66, title: "Youth", artist: "기현 (몬스타엑스)", tags: "청춘, 여행, 자유, 락" },
     { id: 67, title: "00:00 (Zero O'Clock)", artist: "방탄소년단", tags: "자정, 리셋, 새로운시작, 위로, 내일" },
-    // [SECTION 2: 기존 인기곡 (K-POP & 발라드 추가)]
     { id: 68, title: "Supernova", artist: "aespa", tags: "강렬함, 변화, 폭발적 에너지, 미래, 혁신" },
     { id: 69, title: "Hype Boy", artist: "NewJeans", tags: "설렘, 트렌디, 청량, 기분전환, 시작" },
     { id: 70, title: "Dynamite", artist: "BTS", tags: "희망, 긍정, 활력, 전세계적, 펑키, 기분업" },
@@ -176,7 +175,7 @@ const SONG_DATABASE = [
     { id: 168, title: "응급실", artist: "izi", tags: "노래방, 떼창, 락발라드, 사랑" },
     { id: 169, title: "소주 한 잔", artist: "임창정", tags: "술, 이별, 아재감성, 레전드" },
     { id: 170, title: "가시", artist: "버즈", tags: "락발라드, 떼창, 노래방, 추억" },
-    // [SECTION 3: 글로벌 POP 명곡 (K-POP 외 선택지)]
+    // [SECTION 3: 글로벌 POP 명곡]
     { id: 171, title: "Viva La Vida", artist: "Coldplay", tags: "인생, 웅장함, 역사, 새출발, 왕" },
     { id: 172, title: "I Don't Think That I Like Her", artist: "Charlie Puth", tags: "설렘, 짝사랑, 경쾌함, 팝" },
     { id: 173, title: "Dangerously", artist: "Charlie Puth", tags: "열정, 사랑, 고음, 호소력" },
@@ -220,18 +219,21 @@ export default async function handler(req) {
     }
 
     try {
-        // [수정] 프론트엔드에서 { keyword, wish } 데이터 수신
-        const { keyword, wish } = await req.json(); 
+        // [수정] 프론트엔드에서 isKorean 정보를 받음
+        const { keyword, wish, isKorean } = await req.json(); 
         const apiKey = process.env.OPENAI_API_KEY;
 
         if (!apiKey) {
             return new Response(JSON.stringify({ error: "API Key not configured" }), { status: 500 });
         }
 
-        // DB 전체를 문자열로 변환 (AI에게 제공용)
         const dbString = JSON.stringify(SONG_DATABASE.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
         
-        // 프롬프트: DB 내에서 태그 매칭을 통해 1곡 선정
+        // [수정] 언어에 따른 프롬프트 지시사항
+        const langInstruction = isKorean
+            ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
+            : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
+
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -246,14 +248,17 @@ export default async function handler(req) {
         Analyze the user's wish and keyword, then select the ONE song from the [Song Database] that best matches the mood.
         
         [Rules]
-        1. YOU MUST PICK FROM THE DATABASE. Do not invent songs.
-        2. Look at the "tags" in the database. Match the user's wish emotion with the song's tags.
-        3. Output ONLY JSON format.
+        1. YOU MUST PICK FROM THE DATABASE.
+        2. Match the user's wish emotion with the song's tags.
+        ${langInstruction}
+        4. Output ONLY JSON format.
         
         [Output Format]
         { 
-            "id": (number of the selected song), 
-            "reason": "Write a warm, encouraging reason in Korean (honorifics/해요체). Max 2 sentences." 
+            "id": (number), 
+            "title": "(Song title in target language)",
+            "artist": "(Artist name in target language)",
+            "reason": "(Reason in target language, max 2 sentences)" 
         }
         `;
 
@@ -273,31 +278,29 @@ export default async function handler(req) {
 
         const data = await response.json();
         
-        // AI 응답 파싱
         let aiSelection;
         try {
             aiSelection = JSON.parse(data.choices[0].message.content);
         } catch (e) {
-            // 실패 시 랜덤
             const randomId = Math.floor(Math.random() * SONG_DATABASE.length) + 1;
-            aiSelection = { id: randomId, reason: "당신의 소원이 꼭 이뤄지길 바라는 마음으로 골랐어요." };
+            aiSelection = { id: randomId, reason: isKorean ? "행운이 가득하시길!" : "Good luck!" };
         }
 
-        // ID로 노래 찾기
+        // DB에서 원본 데이터 찾기 (이미지 검색용)
         let selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
         if (!selectedSong) {
             selectedSong = SONG_DATABASE[0];
         }
 
-        // 결과 생성 (기본 이미지 포함)
+        // [수정] 결과 객체 생성: AI가 번역해준 제목/가수가 있으면 그것을 우선 사용
         let result = {
-            title: selectedSong.title,
-            artist: selectedSong.artist,
+            title: aiSelection.title || selectedSong.title, // AI 번역값 우선
+            artist: aiSelection.artist || selectedSong.artist, // AI 번역값 우선
             reason: aiSelection.reason,
             img_url: "record.png" 
         };
 
-        // 이미지 검색 (엄격 -> 느슨 -> 실패 시 record.png 유지)
+        // 이미지 검색 (Deezer에는 원본 DB의 영어/한국어 섞인 제목으로 검색해야 정확함)
         try {
             const query = `artist:"${selectedSong.artist}" track:"${selectedSong.title}"`;
             let searchRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`);
