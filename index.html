@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -16,7 +15,6 @@
 
     <title>2026 새해 첫 곡</title>
 
-    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://2026-newyear-song.vercel.app/">
     <meta property="og:title" content="2026년 나만의 새해 첫 곡 찾기">
@@ -24,34 +22,43 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
+        /* 1. PC 배경을 위한 설정 */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             min-height: 100vh;
             min-height: 100dvh; /* iOS Safari 대응 */
-            background: linear-gradient(
-                180deg,
-                #000000 0%,
-                #1a1a1a 40%,
-                #FFE173 100%
-            );
+            background-color: #000000; /* 전체 배경 검정 */
         }
 
         body {
             font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
             color: #ffffff;
             overflow-x: hidden;
+            /* PC에서 컨텐츠를 중앙에 두기 위한 설정 */
+            display: flex;
+            justify-content: center;
         }
 
+        /* 2. 모바일 뷰(그라데이션 영역) 설정 */
         .container {
             width: 100%;
-            max-width: 430px;
+            max-width: 430px; /* 이 너비까지만 그라데이션이 보임 */
             min-height: 100vh;
             min-height: 100dvh;
             margin: 0 auto;
             padding-bottom: 160px;
             box-sizing: border-box;
+            position: relative; /* 자식 요소 위치 기준 */
+            
+            /* 그라데이션을 body에서 여기로 이동 */
+            background: linear-gradient(
+                180deg,
+                #000000 0%,
+                #1a1a1a 40%,
+                #FFE173 100%
+            );
         }
 
         .content-top {
@@ -92,13 +99,18 @@
             100% { transform: translateY(100px); }
         }
 
+        /* 3. 버튼 위치 수정 (PC 중앙 정렬 대응) */
         .button-area {
             position: fixed;
-            left: 20px;
-            right: 20px;
             bottom: calc(40px + env(safe-area-inset-bottom));
-            max-width: 390px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 390px; /* 버튼 최대 너비 */
+            padding: 0 20px; /* 좌우 여백 */
+            box-sizing: border-box;
+            
+            /* 화면 중앙 정렬 */
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 10;
         }
 
@@ -111,6 +123,7 @@
             font-size: 18px;
             font-weight: 700;
             color: #000;
+            cursor: pointer;
         }
     </style>
 </head>
