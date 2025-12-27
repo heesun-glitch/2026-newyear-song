@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-J0W132F99N');
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J0W132F99N');
     </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0,
+                   user-scalable=no, viewport-fit=cover">
+
+    <!-- iOS status bar -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <title>2026 새해 첫 곡</title>
 
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://2026-newyear-song.vercel.app/">
     <meta property="og:title" content="2026년 나만의 새해 첫 곡 찾기">
@@ -21,162 +28,188 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
-        /* [수정 1] html, body에서 배경 그라데이션 제거 */
-        html {
-            height: 100%;
+        /* =====================
+           RESET & BASE
+        ====================== */
+        html, body {
             margin: 0;
             padding: 0;
-            background-color: #000000; /* 로딩 전 깜빡임 방지용 검정 */
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            overscroll-behavior: none;
         }
 
-        body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%;
-            min-height: 100%;
-            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
-            color: white; 
-            background: transparent; 
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            color: #ffffff;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            display: flex; 
-            justify-content: center; 
         }
 
-        /* [핵심 해결책] 배경 전용 고정 레이어 추가 
-           - 스크롤이나 주소창 변화에도 배경이 절대 움직이거나 깨지지 않음
-        */
+        /* =====================
+           FIXED BACKGROUND
+        ====================== */
         .fixed-bg {
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                #000000 0%,
+                #1a1a1a 40%,
+                #FFE173 100%
+            );
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* =====================
+           CONTAINER
+        ====================== */
+        .container {
             width: 100%;
-            height: 100%; /* 화면 전체를 덮음 */
-            z-index: -1; /* 컨텐츠 뒤로 보냄 */
-            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%);
-            background-size: cover;
-            /* iOS 사파리 튀는 현상 방지 */
-            will-change: transform; 
+            max-width: 430px;
+            min-height: 100svh; /* iOS Safari 대응 */
+            margin: 0 auto;
+            padding-bottom: 160px; /* 버튼 공간 확보 */
+            box-sizing: border-box;
+            position: relative;
+            animation: slideIn 0.5s ease-out forwards;
         }
 
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            to   { transform: translateX(0); opacity: 1; }
         }
 
-        .container { 
-            width: 100%; 
-            max-width: 430px; 
-            min-height: 100vh; 
-            background: transparent; 
-            margin: 0 auto; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 0 0 140px 0; 
-            box-sizing: border-box; 
-            animation: slideIn 0.5s ease-out forwards;
-            will-change: transform, opacity;
+        /* =====================
+           CONTENT
+        ====================== */
+        .content-top {
+            margin-top: 60px;
+            padding: 0 20px;
+            text-align: center;
         }
-        
-        .content-top { margin-top: 60px; padding: 0 20px; text-align: center; z-index: 2; flex-shrink: 0; }
-        h1 { font-size: 32px; font-weight: 800; margin-bottom: 5px; line-height: 1.4; }
-        p.subtitle { font-size: 16px; color: #acacac; margin: 0; }
-        
-        .main-image { 
-            width: 100%; 
-            flex-grow: 1; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 1; 
-            overflow: visible; 
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            line-height: 1.4;
         }
-        
-        .main-image img { 
-            width: 100%; 
-            height: auto; 
-            object-fit: cover; 
-            transform: translateY(100px); 
-            animation: float 3s ease-in-out infinite; 
-            display: block; 
+
+        .subtitle {
+            font-size: 16px;
+            color: #acacac;
+            margin: 0;
         }
-        
-        /* 버튼 위치 고정 및 스타일 유지 */
-        .button-area { 
-            position: fixed; 
-            bottom: calc(40px + env(safe-area-inset-bottom)); 
-            left: 50%; 
-            transform: translateX(-50%); 
-            width: 100%; 
-            max-width: 430px; 
-            padding: 0 20px; 
-            box-sizing: border-box; 
-            z-index: 9999; 
-            background: transparent; 
-            pointer-events: none; 
+
+        .main-image {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
         }
-        
-        .start-btn { 
-            width: 100%; 
-            padding: 18px 0; 
-            background-color: #FFE173; 
-            border: none; 
-            border-radius: 12px; 
-            font-size: 18px; 
-            font-weight: 700; 
-            color: #000000; 
-            cursor: pointer; 
-            transition: transform 0.1s; 
-            pointer-events: auto; 
-            box-shadow: 
-                inset 0 6px 4px rgba(255, 255, 255, 0.25), 
+
+        .main-image img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            transform: translateY(100px);
+            animation: float 3s ease-in-out infinite;
+            display: block;
+        }
+
+        @keyframes float {
+            0%   { transform: translateY(100px); }
+            50%  { transform: translateY(80px); }
+            100% { transform: translateY(100px); }
+        }
+
+        /* =====================
+           FIXED BUTTON
+        ====================== */
+        .button-area {
+            position: fixed;
+            left: 20px;
+            right: 20px;
+            bottom: calc(40px + env(safe-area-inset-bottom));
+            max-width: 390px;
+            margin: 0 auto;
+            z-index: 9999;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 18px 0;
+            background-color: #FFE173;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+            cursor: pointer;
+            box-shadow:
+                inset 0 6px 4px rgba(255, 255, 255, 0.25),
                 0 4px 15px rgba(0, 0, 0, 0.25);
         }
-        .start-btn:active { transform: scale(0.98); }
 
-        @keyframes float { 
-            0% { transform: translateY(100px); } 
-            50% { transform: translateY(80px); } 
-            100% { transform: translateY(100px); } 
+        .start-btn:active {
+            transform: scale(0.98);
         }
     </style>
 </head>
+
 <body>
+    <!-- Background -->
     <div class="fixed-bg"></div>
 
+    <!-- Content -->
     <div class="container">
         <div class="content-top">
-            <h1 id="mainTitle">2026년<br>나만의 <span style="color: #FFE173;">새해 첫 곡</span> 찾기</h1>
-            <p class="subtitle" id="subTitle">새해 소원을 적고 2026년을 시작할 노래를 만나보세요.</p>
+            <h1 id="mainTitle">
+                2026년<br>
+                나만의 <span style="color:#FFE173;">새해 첫 곡</span> 찾기
+            </h1>
+            <p class="subtitle" id="subTitle">
+                새해 소원을 적고 2026년을 시작할 노래를 만나보세요.
+            </p>
         </div>
 
         <div class="main-image">
             <img src="3d-icon-image.png" alt="음악과 행운 아이콘">
         </div>
+    </div>
 
-        <div class="button-area">
-            <button class="start-btn" id="startBtn" onclick="location.href='question.html'">시작하기</button>
-        </div>
+    <!-- Fixed Button (container 밖) -->
+    <div class="button-area">
+        <button class="start-btn" id="startBtn"
+                onclick="location.href='question.html'">
+            시작하기
+        </button>
     </div>
 
     <script>
-        window.onload = function() {
+        window.onload = function () {
             const isKorean = navigator.language.includes('ko');
+
             const i18n = {
                 ko: {
-                    title: "2026년<br>나만의 <span style='color: #FFE173;'>새해 첫 곡</span> 찾기",
+                    title: "2026년<br>나만의 <span style='color:#FFE173;'>새해 첫 곡</span> 찾기",
                     subtitle: "새해 소원을 적고 2026년을 시작할 노래를 만나보세요.",
                     btn: "시작하기"
                 },
                 en: {
-                    title: "My 2026<br><span style='color: #FFE173;'>New Year Song</span>",
+                    title: "My 2026<br><span style='color:#FFE173;'>New Year Song</span>",
                     subtitle: "Make a wish and find your perfect song for 2026.",
                     btn: "Start Now"
                 }
             };
+
             const lang = isKorean ? i18n.ko : i18n.en;
+
             document.getElementById('mainTitle').innerHTML = lang.title;
             document.getElementById('subTitle').innerText = lang.subtitle;
             document.getElementById('startBtn').innerText = lang.btn;
