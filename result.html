@@ -14,6 +14,7 @@
     </script>
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
@@ -21,31 +22,16 @@
         .header { width: 100%; height: 60px; display: flex; align-items: center; margin-top: 10px; flex-shrink: 0; }
         .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; }
         .back-btn img { width: 48px; height: 48px; display: block; }
-        .page-title { margin-top: 10px; margin-bottom: 20px; }
+        
+        /* 타이틀과 QR 배치를 위한 플렉스 박스 */
+        .page-title { margin-top: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .page-title h2 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; white-space: nowrap; }
         
-        .album-cover { 
-            width: 100%; 
-            height: 0; 
-            padding-bottom: 100%; 
-            position: relative; 
-            background-color: transparent; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            margin-bottom: 24px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
-        }
+        /* QR 코드 테두리 디자인 */
+        #qr-wrapper { background: white; padding: 5px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(255,225,115,0.3); }
         
-        .album-cover img { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; 
-            display: block; 
-        }
-
+        .album-cover { width: 100%; height: 0; padding-bottom: 100%; position: relative; background-color: transparent; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .album-cover img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
         .song-info { margin-bottom: 20px; }
         .song-title { font-size: 20px; font-weight: 800; margin: 0 0 5px 0; }
         .artist-name { font-size: 16px; color: #aaaaaa; margin: 0; font-weight: 400; }
@@ -70,7 +56,14 @@
         <div class="header" data-html2canvas-ignore="true">
             <button class="back-btn" onclick="retryService()"><img src="arrow-left.svg" alt="Back"></button>
         </div>
-        <div class="page-title"><h2>2026년 나만의 새해 첫 곡</h2></div>
+        
+        <div class="page-title">
+            <h2>2026년 나만의<br>새해 첫 곡</h2>
+            <div id="qr-wrapper">
+                <div id="qrcode"></div>
+            </div>
+        </div>
+
         <div class="album-cover">
             <img id="albumImg" alt="album cover">
         </div>
@@ -128,6 +121,17 @@
             document.getElementById('artistName').innerText = artist;
             document.getElementById('reasonText').innerHTML = `"${wish}"<br>${reason}`;
 
+            // QR 코드 생성 (메인 주소 연결)
+            const mainPageUrl = "https://2026-newyear-song.vercel.app/";
+            new QRCode(document.getElementById("qrcode"), {
+                text: mainPageUrl,
+                width: 54, // 타이틀 높이에 맞춘 크기
+                height: 54,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
             if (typeof gtag === 'function') {
                 gtag('event', 'view_result', {
                     'event_category': 'Result',
@@ -153,7 +157,6 @@
             }
         };
 
-        // 링크 복사 추적 기능 추가
         function copyLink() {
             if (typeof gtag === 'function') {
                 gtag('event', 'click_copy_link', { 'event_category': 'Engagement' });
@@ -161,7 +164,6 @@
             navigator.clipboard.writeText(window.location.href).then(() => alert(isKorean ? "복사되었습니다." : "Copied."));
         }
 
-        // 다시하기 추적 기능 추가
         function retryService() {
             if (typeof gtag === 'function') {
                 gtag('event', 'click_retry', { 'event_category': 'Engagement' });
@@ -172,7 +174,6 @@
         async function saveImageOrShare() {
             const captureArea = document.getElementById('captureArea');
             
-            // 공유/저장 클릭 추적 추가
             if (typeof gtag === 'function') {
                 gtag('event', 'click_share_or_save', { 
                     'event_category': 'Engagement',
