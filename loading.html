@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyzing...</title>
     
+    <link rel="preload" href="https://lottie.host/0eb64900-9ece-4d58-951f-684a16c1e285/HPQMTQlKxY.lottie" as="fetch" crossorigin>
+    
     <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
@@ -24,6 +26,13 @@
         .title-area { margin-top: 10px; margin-bottom: 0; }
         h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; white-space: nowrap; }
         .lottie-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding-bottom: 60px; }
+        
+        /* 3. 로티가 뜨기 전 빈 공간 방지 및 즉각적인 렌더링을 위한 스타일 */
+        dotlottie-player {
+            width: 300px;
+            height: 300px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -36,7 +45,6 @@
                 src="https://lottie.host/0eb64900-9ece-4d58-951f-684a16c1e285/HPQMTQlKxY.lottie" 
                 background="transparent" 
                 speed="1" 
-                style="width: 300px; height: 300px;" 
                 loop 
                 autoplay>
             </dotlottie-player>
@@ -48,15 +56,16 @@
         const userWish = localStorage.getItem('userWish') || "Happy New Year";
         const isKorean = navigator.language.includes('ko');
 
+        // 4. 타이틀 변경 로직을 즉시 실행하여 로딩 체감 속도 향상
+        if (!isKorean) { 
+            document.getElementById('loadingTitle').innerText = "Analyzing your wish..."; 
+        }
+
         window.onload = function() {
-            if (!isKorean) { 
-                document.getElementById('loadingTitle').innerText = "Analyzing your wish..."; 
-            }
             fetchAIRecommendation();
         };
 
         async function fetchAIRecommendation() {
-            // ★ GA4 데이터 전송: AI에게 분석을 요청하는 순간을 기록합니다.
             if (typeof gtag === 'function') { 
                 gtag('event', 'ai_request', { 
                     'event_category': 'API',
@@ -91,7 +100,6 @@
                 const aiContent = data.choices ? data.choices[0].message.content : JSON.stringify(data);
                 const result = JSON.parse(aiContent);
                 
-                // 결과 페이지로 데이터 전달 (리다이렉트)
                 location.replace(`result.html?t=${encodeURIComponent(result.title)}&a=${encodeURIComponent(result.artist)}&r=${encodeURIComponent(result.reason)}&w=${encodeURIComponent(userWish)}&img=${encodeURIComponent(result.img_url)}`);
 
             } catch (error) { 
