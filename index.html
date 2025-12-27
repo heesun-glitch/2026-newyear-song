@@ -12,7 +12,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
     
     <title>2026 새해 첫 곡</title>
 
@@ -23,11 +22,14 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
-        /* [핵심] 배경 설정 */
+        /* [핵심 1] 배경 투명화 및 확장 설정 */
         html {
             height: 100%;
-            /* 배경색이 비었을 때 흰색이 나오지 않도록 검정 기본값 설정 */
-            background-color: #000000;
+            margin: 0;
+            padding: 0;
+            /* html에도 그라데이션을 주어 주소창 뒤로 배경이 비치게 함 */
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%) no-repeat fixed;
+            background-size: cover;
         }
 
         body { 
@@ -37,9 +39,7 @@
             min-height: 100%;
             font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
             color: white; 
-            /* 그라데이션을 body에 고정(fixed)시켜 스크롤해도 배경은 가만히 있고 UI바 뒤에 비치게 함 */
-            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%) no-repeat fixed;
-            background-size: cover;
+            background: transparent; /* body는 투명하게 하여 html 배경을 보여줌 */
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             display: flex; 
@@ -54,7 +54,6 @@
         .container { 
             width: 100%; 
             max-width: 430px; 
-            /* 최소 높이를 화면 전체로 잡아서 컨텐츠가 적어도 배경이 끊기지 않게 함 */
             min-height: 100vh; 
             background: transparent; 
             margin: 0 auto; 
@@ -62,7 +61,7 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            /* 버튼이 가리지 않도록 하단 여백 충분히 확보 */
+            /* 버튼에 가려지지 않도록 하단 여백 충분히 확보 */
             padding: 0 0 140px 0; 
             box-sizing: border-box; 
             animation: slideIn 0.5s ease-out forwards;
@@ -92,25 +91,23 @@
             display: block; 
         }
         
-        /* [핵심] 버튼 고정 위치 설정 */
+        /* [핵심 2] 버튼 고정 위치 (Viewport 기준) */
         .button-area { 
-            /* position: fixed -> 화면 스크롤과 상관없이 뷰포트(눈에 보이는 화면) 기준으로 고정 */
             position: fixed; 
-            
-            /* 하단에서 40px 위로 띄움 + 아이폰 홈 바(Safe Area) 영역만큼 추가로 띄워서 가려짐 방지 */
+            /* 화면 최하단에서 40px + 아이폰 하단 바(Safe Area)만큼 위로 */
             bottom: calc(40px + env(safe-area-inset-bottom)); 
-            
             left: 50%; 
             transform: translateX(-50%); 
             width: 100%; 
             max-width: 430px; 
             padding: 0 20px; 
             box-sizing: border-box; 
-            z-index: 9999; /* z-index를 높여서 항상 최상단에 노출 */
+            z-index: 9999; 
             background: transparent; 
-            pointer-events: none; 
+            pointer-events: none; /* 빈 공간 클릭 시 뒤에 있는 컨텐츠가 눌리도록 */
         }
         
+        /* [핵심 3] 버튼 스타일 & 쉐도우 (Figma 값 적용) */
         .start-btn { 
             width: 100%; 
             padding: 18px 0; 
@@ -122,8 +119,14 @@
             color: #000000; 
             cursor: pointer; 
             transition: transform 0.1s; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
             pointer-events: auto; 
+            
+            /* Inner Shadow: X:0, Y:6, Blur:4, Color: #FFFFFF 25% 
+               Drop Shadow:  X:0, Y:4, Blur:15, Color: #000000 25% 
+            */
+            box-shadow: 
+                inset 0 6px 4px rgba(255, 255, 255, 0.25), 
+                0 4px 15px rgba(0, 0, 0, 0.25);
         }
         .start-btn:active { transform: scale(0.98); }
 
