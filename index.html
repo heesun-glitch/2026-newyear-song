@@ -12,7 +12,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>2026 새해 첫 곡</title>
 
@@ -28,35 +28,34 @@
             margin: 0;
             padding: 0;
             width: 100%;
-        }
-
-        /* 🔥 배경을 body에 직접 적용 */
-        body {
             min-height: 100vh;
-            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-            color: #ffffff;
-            overflow-x: hidden;
-
+            min-height: 100dvh; /* iOS Safari 대응 */
             background: linear-gradient(
                 180deg,
                 #000000 0%,
                 #1a1a1a 40%,
                 #FFE173 100%
             );
-            background-repeat: no-repeat;
-            background-attachment: scroll;
+        }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            color: #ffffff;
+            overflow-x: hidden;
         }
 
         .container {
             width: 100%;
             max-width: 430px;
+            min-height: 100vh;
+            min-height: 100dvh;
             margin: 0 auto;
-            padding-bottom: 140px; /* 버튼 공간 */
+            padding-bottom: 160px;
             box-sizing: border-box;
         }
 
         .content-top {
-            margin-top: 60px;
+            margin-top: env(safe-area-inset-top, 60px);
             padding: 0 20px;
             text-align: center;
         }
@@ -93,15 +92,14 @@
             100% { transform: translateY(100px); }
         }
 
-        /* 버튼 고정 */
         .button-area {
             position: fixed;
             left: 20px;
             right: 20px;
-            bottom: 40px;
+            bottom: calc(40px + env(safe-area-inset-bottom));
             max-width: 390px;
             margin: 0 auto;
-            z-index: 9999;
+            z-index: 10;
         }
 
         .start-btn {
