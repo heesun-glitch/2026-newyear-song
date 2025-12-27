@@ -23,13 +23,14 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
-        /* 기본 배경을 강한 검정으로 설정 */
+        /* 1. 브라우저 바깥 영역은 무조건 검은색 (노란 띠 방지 핵심) */
         html, body { 
             margin: 0; 
             padding: 0; 
             background-color: #000000 !important; 
             height: 100%;
             overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
         body { 
@@ -48,8 +49,8 @@
             width: 100%; 
             max-width: 430px; 
             min-height: 100vh; 
-            /* 배경 그라데이션 완전 삭제 및 검정색 고정 */
-            background: #000000; 
+            /* 2. 콘텐츠 영역 내부에만 그라데이션 복구 */
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%); 
             margin: 0 auto; 
             position: relative; 
             display: flex; 
@@ -76,9 +77,11 @@
             display: block; 
         }
         
+        /* 3. 버튼 고정 및 위치 설정 */
         .button-area { 
-            position: fixed; 
-            bottom: 40px; 
+            position: fixed; /* 스크롤 상관없이 고정 */
+            /* 화면 하단에서 40px + 아이폰 하단 바 공간(safe-area)만큼 띄움 */
+            bottom: calc(40px + env(safe-area-inset-bottom)); 
             left: 50%; 
             transform: translateX(-50%); 
             width: 100%; 
@@ -99,7 +102,7 @@
             color: #000000; 
             cursor: pointer; 
             transition: transform 0.1s; 
-            box-shadow: 0 4px 15px rgba(255, 225, 115, 0.2); 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
         }
         .start-btn:active { transform: scale(0.98); }
 
