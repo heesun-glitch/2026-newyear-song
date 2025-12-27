@@ -14,11 +14,36 @@
     </script>
     
     <style>
-        /* 수정: overflow 제거, min-height 적용 */
-        body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; }
+        /* 수정: overflow 제거, min-height 적용, x축 넘침 방지 */
+        body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-x: hidden; }
         
-        /* 수정: 하단 패딩 추가, min-height 적용 */
-        .container { width: 100%; max-width: 430px; min-height: 100vh; background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%); margin: 0 auto; position: relative; display: flex; flex-direction: column; padding: 0 20px 120px 20px; box-sizing: border-box; }
+        /* 페이지 진입 애니메이션 정의 */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* 수정: 하단 패딩 추가, min-height 적용, 애니메이션 추가 */
+        .container { 
+            width: 100%; 
+            max-width: 430px; 
+            min-height: 100vh; 
+            background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%); 
+            margin: 0 auto; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 0 20px 120px 20px; 
+            box-sizing: border-box; 
+            animation: slideIn 0.5s ease-out forwards;
+            will-change: transform, opacity;
+        }
         
         .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
         .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; display: flex; align-items: center; }
@@ -87,7 +112,6 @@
         }
 
         function saveAndNext() {
-            // ★ 수정됨: GA4로 'user_keyword' 파라미터를 명확하게 전송합니다.
             if (typeof gtag === 'function') { 
                 gtag('event', 'select_keyword', { 
                     'user_keyword': selectedKeyword 

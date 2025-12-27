@@ -21,8 +21,36 @@
 
     <style>
         /* 기존 스타일 유지 */
-        body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; }
-        .container { width: 100%; max-width: 430px; min-height: 100vh; background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%); margin: 0 auto; position: relative; display: flex; flex-direction: column; align-items: center; padding: 0 0 120px 0; box-sizing: border-box; }
+        body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-x: hidden; }
+        
+        /* 페이지 진입 애니메이션 정의 */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 430px; 
+            min-height: 100vh; 
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%); 
+            margin: 0 auto; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 0 0 120px 0; 
+            box-sizing: border-box; 
+            /* 애니메이션 적용 */
+            animation: slideIn 0.5s ease-out forwards;
+            will-change: transform, opacity;
+        }
         
         .content-top { margin-top: 60px; padding: 0 20px; text-align: center; z-index: 2; flex-shrink: 0; }
         h1 { font-size: 32px; font-weight: 800; margin-bottom: 5px; line-height: 1.4; }
@@ -80,7 +108,6 @@
 
     <script>
         window.onload = function() {
-            // 1. 언어 설정 및 텍스트 색상 적용 로직
             const isKorean = navigator.language.includes('ko');
             const i18n = {
                 ko: {
@@ -99,7 +126,6 @@
             document.getElementById('subTitle').innerText = lang.subtitle;
             document.getElementById('startBtn').innerText = lang.btn;
 
-            // 2. [추가됨] 시작 버튼 클릭 데이터 전송 (데이터 분석용)
             document.getElementById('startBtn').addEventListener('click', function() {
                 if (typeof gtag === 'function') {
                     gtag('event', 'click_start', {
