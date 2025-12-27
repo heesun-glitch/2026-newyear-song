@@ -6,9 +6,7 @@
     <title>Analyzing...</title>
     
     <link rel="preload" href="https://lottie.host/0eb64900-9ece-4d58-951f-684a16c1e285/HPQMTQlKxY.lottie" as="fetch" crossorigin>
-    
     <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
-
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -20,16 +18,9 @@
     <style>
         body { margin: 0; padding: 0; background-color: #000000; height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow: hidden; }
         
-        /* 페이지 진입 애니메이션 정의 */
         @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .container { 
@@ -43,7 +34,6 @@
             flex-direction: column; 
             padding: 0 20px; 
             box-sizing: border-box; 
-            /* 애니메이션 적용 */
             animation: slideIn 0.5s ease-out forwards;
             will-change: transform, opacity;
         }
@@ -55,11 +45,7 @@
         h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; white-space: nowrap; }
         .lottie-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding-bottom: 60px; }
         
-        dotlottie-player {
-            width: 300px;
-            height: 300px;
-            display: block;
-        }
+        dotlottie-player { width: 300px; height: 300px; display: block; }
     </style>
 </head>
 <body>
@@ -100,30 +86,23 @@
                 }); 
             }
 
-            let systemInstruction = isKorean 
-                ? `사용자 정보:
-                   - 키워드: "${userKeyword}"
-                   - 소원: "${userWish}"
-                   
-                   이 사용자의 소원이 2026년에 이루어졌을 때의 감정을 분석해주세요.
-                   그리고 제공된 노래 리스트 중에서 가장 적합한 노래를 골라주세요.`
-                : `User Info:
-                   - Keyword: "${userKeyword}"
-                   - Wish: "${userWish}"
-                   
-                   Analyze the emotion of this wish. Pick the best song from the provided database.`;
-
             try {
+                // [수정] systemInstruction 없이 데이터(keyword, wish)만 깔끔하게 전달
                 const response = await fetch("/api/generate", { 
                     method: "POST", 
                     headers: { "Content-Type": "application/json" }, 
-                    body: JSON.stringify({ systemInstruction }) 
+                    body: JSON.stringify({ 
+                        keyword: userKeyword,
+                        wish: userWish
+                    }) 
                 });
 
                 if (!response.ok) throw new Error("Server Error");
 
                 const data = await response.json();
-                const aiContent = data.choices ? data.choices[0].message.content : JSON.stringify(data);
+                
+                // 백엔드에서 완성된 결과를 받아서 처리
+                const aiContent = data.choices[0].message.content;
                 const result = JSON.parse(aiContent);
                 
                 location.replace(`result.html?t=${encodeURIComponent(result.title)}&a=${encodeURIComponent(result.artist)}&r=${encodeURIComponent(result.reason)}&w=${encodeURIComponent(userWish)}&img=${encodeURIComponent(result.img_url)}`);
