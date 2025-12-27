@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 새해 첫 곡 - 키워드 선택</title>
     
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J0W132F99N"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -14,10 +15,20 @@
     </script>
     
     <style>
-        /* 수정: overflow 제거, min-height 적용, x축 넘침 방지 */
-        body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-x: hidden; }
+        /* ✅ 사이트 기본 세팅: body는 투명 */
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: transparent; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
+            color: white; 
+            overflow-x: hidden; 
+        }
         
-        /* 페이지 진입 애니메이션 정의 */
+        /* 페이지 진입 애니메이션 */
         @keyframes slideIn {
             from {
                 transform: translateX(100%);
@@ -29,12 +40,17 @@
             }
         }
 
-        /* 수정: 하단 패딩 추가, min-height 적용, 애니메이션 추가 */
+        /* 콘텐츠 영역만 배경 적용 */
         .container { 
             width: 100%; 
             max-width: 430px; 
             min-height: 100vh; 
-            background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%); 
+            background: linear-gradient(
+                180deg,
+                rgba(255, 225, 115, 0.15) 0%,
+                #1a1a1a 25%,
+                #000000 50%
+            ); 
             margin: 0 auto; 
             position: relative; 
             display: flex; 
@@ -45,18 +61,75 @@
             will-change: transform, opacity;
         }
         
-        .header { width: 100%; height: 80px; display: flex; align-items: center; margin-top: 10px; }
-        .back-btn { background: none; border: none; cursor: pointer; padding: 10px 20px 10px 0; display: flex; align-items: center; }
-        .back-btn img { width: 48px; height: 48px; display: block; }
-        .title-area { margin-top: 10px; margin-bottom: 40px; }
-        h2 { font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0; }
-        .highlight { color: #FFE173; }
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
-        .option-btn { background-color: #282828; border: 1px solid transparent; border-radius: 12px; padding: 24px 0; font-size: 16px; color: #cccccc; cursor: pointer; transition: all 0.2s; }
-        .option-btn:hover { background-color: #333; }
-        .option-btn.selected { background-color: rgba(255, 225, 115, 0.3); border: 1px solid #FFE173; color: #FFE173; font-weight: 700; }
+        .header { 
+            width: 100%; 
+            height: 80px; 
+            display: flex; 
+            align-items: center; 
+            margin-top: 10px; 
+        }
+
+        .back-btn { 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            padding: 10px 20px 10px 0; 
+            display: flex; 
+            align-items: center; 
+        }
+
+        .back-btn img { 
+            width: 48px; 
+            height: 48px; 
+            display: block; 
+        }
+
+        .title-area { 
+            margin-top: 10px; 
+            margin-bottom: 40px; 
+        }
+
+        h2 { 
+            font-size: 28px; 
+            font-weight: 700; 
+            line-height: 1.4; 
+            margin: 0; 
+        }
+
+        .highlight { 
+            color: #FFE173; 
+        }
+
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            width: 100%; 
+        }
+
+        .option-btn { 
+            background-color: #282828; 
+            border: 1px solid transparent; 
+            border-radius: 12px; 
+            padding: 24px 0; 
+            font-size: 16px; 
+            color: #cccccc; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+
+        .option-btn:hover { 
+            background-color: #333; 
+        }
+
+        .option-btn.selected { 
+            background-color: rgba(255, 225, 115, 0.3); 
+            border: 1px solid #FFE173; 
+            color: #FFE173; 
+            font-weight: 700; 
+        }
         
-        /* 수정: 화면 하단 고정 (Fixed) */
+        /* 하단 고정 버튼 */
         .button-area { 
             position: fixed; 
             bottom: 40px; 
@@ -69,30 +142,73 @@
             z-index: 999;
         }
         
-        .next-btn { width: 100%; padding: 18px 0; background-color: #FFE173; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; color: #000000; cursor: pointer; transition: opacity 0.3s; box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); }
-        .next-btn:active { transform: scale(0.98); }
-        .next-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+        .next-btn { 
+            width: 100%; 
+            padding: 18px 0; 
+            background-color: #FFE173; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #000000; 
+            cursor: pointer; 
+            transition: opacity 0.3s; 
+            box-shadow: inset 0 6px 4px rgba(255, 255, 255, 0.25); 
+        }
+
+        .next-btn:active { 
+            transform: scale(0.98); 
+        }
+
+        .next-btn:disabled { 
+            opacity: 0.3; 
+            cursor: not-allowed; 
+            box-shadow: none; 
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header"><button class="back-btn" onclick="location.href='index.html'"><img src="arrow-left.svg" alt="뒤로가기"></button></div>
-        <div class="title-area"><h2 id="pageTitle"></h2></div>
+        <div class="header">
+            <button class="back-btn" onclick="location.href='index.html'">
+                <img src="arrow-left.svg" alt="뒤로가기">
+            </button>
+        </div>
+
+        <div class="title-area">
+            <h2 id="pageTitle"></h2>
+        </div>
+
         <div class="grid-container" id="gridContainer"></div>
-        <div class="button-area"><button id="nextBtn" class="next-btn" disabled onclick="saveAndNext()">다음</button></div>
+
+        <div class="button-area">
+            <button id="nextBtn" class="next-btn" disabled onclick="saveAndNext()">다음</button>
+        </div>
     </div>
+
     <script>
         let selectedKeyword = "";
         const isKorean = navigator.language.includes('ko');
+
         const i18n = {
-            ko: { title: `새해 소원과 관련된<br><span class="highlight">단어</span>를 골라주세요.`, options: ["돈", "사랑", "건강", "커리어", "평화", "이동"], btn: "다음" },
-            en: { title: `Select a <span class="highlight">keyword</span><br>related to your wish.`, options: ["Money", "Love", "Health", "Career", "Peace", "Travel"], btn: "Next" }
+            ko: { 
+                title: `새해 소원과 관련된<br><span class="highlight">단어</span>를 골라주세요.`, 
+                options: ["돈", "사랑", "건강", "커리어", "평화", "이동"], 
+                btn: "다음" 
+            },
+            en: { 
+                title: `Select a <span class="highlight">keyword</span><br>related to your wish.`, 
+                options: ["Money", "Love", "Health", "Career", "Peace", "Travel"], 
+                btn: "Next" 
+            }
         };
 
         window.onload = function() {
             const lang = isKorean ? i18n.ko : i18n.en;
+
             document.getElementById('pageTitle').innerHTML = lang.title;
             document.getElementById('nextBtn').innerText = lang.btn;
+
             const container = document.getElementById('gridContainer');
             lang.options.forEach(opt => {
                 const btn = document.createElement('button');
@@ -104,8 +220,9 @@
         };
 
         function selectOption(element) {
-            const buttons = document.querySelectorAll('.option-btn');
-            buttons.forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.option-btn')
+                .forEach(btn => btn.classList.remove('selected'));
+
             element.classList.add('selected');
             selectedKeyword = element.innerText;
             document.getElementById('nextBtn').disabled = false; 
@@ -117,7 +234,7 @@
                     'user_keyword': selectedKeyword 
                 }); 
             }
-            
+
             localStorage.setItem('userKeyword', selectedKeyword);
             location.href = 'wish-input.html';
         }
