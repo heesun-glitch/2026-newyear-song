@@ -17,20 +17,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
-        /* [수정] 배경 렌더링 최적화: dvh 사용 및 fixed 제거 */
+        /* 배경 렌더링 최적화: dvh 사용 및 fixed 제거 */
         body { margin: 0; padding: 0; background-color: #000000; min-height: 100vh; display: flex; justify-content: center; font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: white; overflow-y: auto; }
         
         .container { 
             width: 100%; 
             max-width: 430px; 
             min-height: 100vh; 
-            min-height: 100dvh; /* 모바일 주소창 대응 */
+            min-height: 100dvh; 
             height: auto; 
-            
-            /* 배경 고정(fixed) 제거됨 -> 스크롤 시 잔상 해결 */
             background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 20%, #000000 40%);
             background-repeat: no-repeat;
-            
             margin: 0 auto; 
             position: relative; 
             display: flex; 
@@ -46,7 +43,6 @@
         .page-title { margin-top: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .page-title h2 { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.4; white-space: nowrap; }
         
-        /* QR 코드 영역 (캡쳐용) */
         #qr-wrapper { display: none; background: white; padding: 5px; border-radius: 8px; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(255,225,115,0.3); }
         
         .album-cover { width: 100%; height: 0; padding-bottom: 100%; position: relative; background-color: transparent; border-radius: 12px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
@@ -73,7 +69,6 @@
         .contact-area { padding-bottom: 60px; text-align: center; font-size: 12px; color: #444444; }
         .contact-area a { color: #555555; text-decoration: none; margin-left: 4px; }
         
-        /* 모달 (PC에서는 사용 안 함, 인앱 브라우저 등 예외 상황용) */
         #resultModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         #resultModal img { max-width: 100%; max-height: 70vh; border-radius: 12px; }
     </style>
@@ -85,7 +80,7 @@
         </div>
         
         <div class="page-title">
-            <h2>2026년 나만의<br>새해 첫 곡</h2>
+            <h2 id="uiPageTitle">2026년 나만의<br>새해 첫 곡</h2>
             <div id="qr-wrapper">
                 <div id="qrcode"></div>
             </div>
@@ -103,20 +98,15 @@
         </div>
         
         <div class="btn-group" data-html2canvas-ignore="true">
-            <button class="action-btn btn-copy" id="btnCopy" onclick="copyLink()">링크 복사하기</button>
-            <button class="action-btn btn-save" id="btnSave" onclick="saveImageOrShare()">이미지 저장하기</button>
+            <button class="action-btn btn-copy" id="btnCopy"></button>
+            <button class="action-btn btn-save" id="btnSave"></button>
         </div>
         
         <div class="retry-area" data-html2canvas-ignore="true">
-            <a onclick="retryService()" class="retry-link">다시하기</a>
+            <a onclick="retryService()" class="retry-link" id="uiRetry">다시하기</a>
         </div>
         <div class="notice-area" data-html2canvas-ignore="true">
-            <ul class="notice-list">
-                <li>본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.</li>
-                <li>앨범 이미지는 Deezer API를 통해 제공됩니다.</li>
-                <li>추천된 노래와 앨범 커버 이미지는 정보 식별을 위한 보조 자료로만 활용됩니다.</li>
-                <li>본 서비스의 결과는 AI가 생성한 주관적인 내용입니다.</li>
-            </ul>
+            <ul class="notice-list" id="uiNoticeList"></ul>
         </div>
         <div class="contact-area" data-html2canvas-ignore="true">
             Contact:<a href="mailto:gmltjs1360@gmail.com">gmltjs1360@gmail.com</a>
@@ -125,8 +115,8 @@
 
     <div id="resultModal" data-html2canvas-ignore="true">
         <img id="generatedImage">
-        <p style="color:#FFE173; font-weight:700; margin-top:20px; text-align:center;">이미지를 꾹 눌러서 저장하세요!</p>
-        <button onclick="document.getElementById('resultModal').style.display='none'" style="margin-top:20px; padding:10px 30px; border-radius:20px; border:none; font-weight:bold;">닫기</button>
+        <p id="uiModalText" style="color:#FFE173; font-weight:700; margin-top:20px; text-align:center;"></p>
+        <button id="uiModalClose" onclick="document.getElementById('resultModal').style.display='none'" style="margin-top:20px; padding:10px 30px; border-radius:20px; border:none; font-weight:bold;"></button>
     </div>
 
     <script>
@@ -134,25 +124,83 @@
         const isKorean = navigator.language.includes('ko');
         const userAgent = navigator.userAgent.toLowerCase();
         
-        // [수정] 모바일 기기 정밀 체크
         const isMobile = /android|iphone|ipad|ipod/i.test(userAgent);
         const isInApp = userAgent.includes('naver') || userAgent.includes('kakao') || userAgent.includes('instagram');
 
+        // [수정] 다국어 텍스트 정의
+        const i18n = {
+            ko: {
+                pageTitle: "2026년 나만의<br>새해 첫 곡",
+                btnCopy: "링크 복사하기",
+                btnSavePC: "이미지 저장하기",
+                btnShareMobile: "공유하기",
+                retry: "다시하기",
+                notice: [
+                    "본 서비스는 수익을 창출하지 않는 비영리 프로젝트입니다.",
+                    "앨범 이미지는 Deezer API를 통해 제공됩니다.",
+                    "추천된 노래와 앨범 커버 이미지는 정보 식별을 위한 보조 자료로만 활용됩니다.",
+                    "본 서비스의 결과는 AI가 생성한 주관적인 내용입니다."
+                ],
+                modalText: "이미지를 꾹 눌러서 저장하세요!",
+                modalClose: "닫기",
+                alertCopy: "복사되었습니다.",
+                alertError: "이미지 생성 오류"
+            },
+            en: {
+                pageTitle: "My 2026<br>New Year Song",
+                btnCopy: "Copy Link",
+                btnSavePC: "Save Image",
+                btnShareMobile: "Share",
+                retry: "Try Again",
+                notice: [
+                    "This is a non-profit project.",
+                    "Album images are provided via Deezer API.",
+                    "Songs and covers are for identification purposes only.",
+                    "Results are subjectively generated by AI."
+                ],
+                modalText: "Long press to save the image!",
+                modalClose: "Close",
+                alertCopy: "Copied.",
+                alertError: "Image generation error"
+            }
+        };
+
         window.onload = function() {
-            // [수정] UI 분기 로직: 모바일 vs PC
+            // 1. 언어 설정 적용
+            const lang = isKorean ? i18n.ko : i18n.en;
+            
+            // 정적 텍스트 교체
+            document.getElementById('uiPageTitle').innerHTML = lang.pageTitle;
+            document.getElementById('uiRetry').innerText = lang.retry;
+            document.getElementById('uiModalText').innerText = lang.modalText;
+            document.getElementById('uiModalClose').innerText = lang.modalClose;
+
+            // 유의사항 리스트 생성
+            const noticeList = document.getElementById('uiNoticeList');
+            lang.notice.forEach(text => {
+                const li = document.createElement('li');
+                li.innerText = text;
+                noticeList.appendChild(li);
+            });
+
+            // 2. UI 분기 로직 (모바일 vs PC) + 언어 적용
             const btnCopy = document.getElementById('btnCopy');
             const btnSave = document.getElementById('btnSave');
 
+            // 버튼 텍스트도 언어에 맞춰 설정
+            btnCopy.innerText = lang.btnCopy;
+
             if (isMobile) {
-                // 모바일: 링크복사 버튼 숨김, 저장 버튼을 '공유하기'로 변경
+                // 모바일: 링크복사 버튼 숨김, 저장 버튼을 '공유하기(Share)'로 변경
                 btnCopy.style.display = 'none';
-                btnSave.innerText = isKorean ? "공유하기" : "Share";
+                btnSave.innerText = lang.btnShareMobile;
             } else {
-                // PC: 버튼 2개 모두 표시 (기본 HTML 상태)
+                // PC: 버튼 2개 모두 표시
                 btnCopy.style.display = 'block';
-                btnSave.innerText = isKorean ? "이미지 저장하기" : "Save Image";
+                btnSave.innerText = lang.btnSavePC;
             }
 
+            // 3. 결과 데이터 바인딩
             const title = urlParams.get('t') || "";
             const artist = urlParams.get('a') || "";
             const wish = urlParams.get('w') || "";
@@ -201,7 +249,8 @@
             if (typeof gtag === 'function') {
                 gtag('event', 'click_copy_link', { 'event_category': 'Engagement' });
             }
-            navigator.clipboard.writeText(window.location.href).then(() => alert(isKorean ? "링크가 복사되었습니다." : "Copied."));
+            const alertMsg = isKorean ? i18n.ko.alertCopy : i18n.en.alertCopy;
+            navigator.clipboard.writeText(window.location.href).then(() => alert(alertMsg));
         }
 
         function retryService() {
@@ -222,7 +271,6 @@
                 });
             }
 
-            // 캡처 전 QR 영역 보이기
             qrWrapper.style.display = 'flex';
 
             try {
@@ -233,27 +281,22 @@
                     allowTaint: false
                 });
 
-                // 캡처 완료 후 QR 영역 다시 숨기기
                 qrWrapper.style.display = 'none';
 
-                // [수정] 동작 로직: 모바일(공유) vs PC(다운로드)
                 if (isMobile) {
-                    // 모바일 동작
                     if (navigator.share && !isInApp) {
                         canvas.toBlob(async (blob) => {
                             const file = new File([blob], "2026_NewYear_Song.png", { type: "image/png" });
                             try {
-                                await navigator.share({ files: [file], title: "2026 새해 첫 곡" });
+                                await navigator.share({ files: [file], title: isKorean ? "2026 새해 첫 곡" : "2026 New Year Song" });
                             } catch (e) { console.error(e); }
                         }, 'image/png');
                     } else {
-                        // 인앱 브라우저 등 navigator.share 불가 시 모달 띄우기 (꾹 눌러 저장)
                         const imgData = canvas.toDataURL('image/png');
                         document.getElementById('generatedImage').src = imgData;
                         document.getElementById('resultModal').style.display = 'flex';
                     }
                 } else {
-                    // PC 동작: 모달 없이 바로 다운로드 트리거
                     const link = document.createElement("a");
                     link.download = "2026_NewYear_Song.png";
                     link.href = canvas.toDataURL("image/png");
@@ -265,7 +308,7 @@
             } catch (err) {
                 qrWrapper.style.display = 'none'; 
                 console.error(err);
-                alert(isKorean ? "이미지 생성 오류" : "Error");
+                alert(isKorean ? i18n.ko.alertError : i18n.en.alertError);
             }
         }
     </script>
