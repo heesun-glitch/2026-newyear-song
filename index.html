@@ -10,7 +10,6 @@
     </script>
 
     <meta charset="UTF-8">
-    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
@@ -23,14 +22,18 @@
     <meta property="og:image" content="https://2026-newyear-song.vercel.app/og-image.png">
 
     <style>
+        /* 핵심 수정 1: 그라데이션을 body에 직접 적용 
+           - 이렇게 해야 브라우저 상/하단 바 뒤로 배경이 비쳐 보임 (투명 효과)
+           - attachment: fixed로 스크롤해도 배경이 고정되어 예쁘게 보임
+        */
         html, body { 
             margin: 0; 
             padding: 0; 
-            height: 100%;
-            /* 배경색 강제 지정 삭제하여 그라데이션이 보이도록 수정 */
-            background-color: #000000;
+            width: 100%;
+            min-height: 100%;
             font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; 
             color: white; 
+            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%) no-repeat fixed;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
@@ -48,14 +51,15 @@
         .container { 
             width: 100%; 
             max-width: 430px; 
-            min-height: 100vh; 
-            /* 요청하신 노란색 그라데이션 복구 */
-            background: linear-gradient(180deg, #000000 0%, #1a1a1a 40%, #FFE173 100%); 
+            min-height: 100vh; /* 화면 전체 높이 사용 */
+            /* 여기서 배경색 삭제! 부모(body)의 배경을 그대로 보여줌 -> 투명 효과 */
+            background: transparent; 
             margin: 0 auto; 
             position: relative; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
+            /* 하단 패딩을 넉넉히 주어 스크롤 끝까지 내렸을 때 내용이 버튼 위로 올라오게 함 */
             padding: 0 0 120px 0; 
             box-sizing: border-box; 
             animation: slideIn 0.5s ease-out forwards;
@@ -66,7 +70,15 @@
         h1 { font-size: 32px; font-weight: 800; margin-bottom: 5px; line-height: 1.4; }
         p.subtitle { font-size: 16px; color: #acacac; margin: 0; }
         
-        .main-image { width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; z-index: 1; overflow: hidden; }
+        .main-image { 
+            width: 100%; 
+            flex-grow: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1; 
+            overflow: visible; /* 이미지가 잘리지 않도록 visible 설정 */
+        }
         
         .main-image img { 
             width: 100%; 
@@ -77,10 +89,11 @@
             display: block; 
         }
         
-        /* 버튼 위치 고정 및 스타일 */
+        /* 핵심 수정 2: 버튼 영역 배경 완전 투명화 
+           - background 속성 자체를 제거하거나 transparent로 설정
+        */
         .button-area { 
             position: fixed; 
-            /* 화면 최하단 기준 40px 위로 고정 (아이폰 하단 바 영역 고려) */
             bottom: calc(40px + env(safe-area-inset-bottom)); 
             left: 50%; 
             transform: translateX(-50%); 
@@ -89,6 +102,8 @@
             padding: 0 20px; 
             box-sizing: border-box; 
             z-index: 999; 
+            background: transparent; /* 배경 없음! 투명! */
+            pointer-events: none; /* 버튼 주변 빈 공간 클릭 시 뒤에 있는 컨텐츠(이미지 등)가 눌리거나 스크롤 되도록 */
         }
         
         .start-btn { 
@@ -103,6 +118,7 @@
             cursor: pointer; 
             transition: transform 0.1s; 
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
+            pointer-events: auto; /* 버튼 자체는 클릭 되어야 함 */
         }
         .start-btn:active { transform: scale(0.98); }
 
