@@ -28,17 +28,17 @@
             width: 100%; 
             max-width: 430px; 
             
-            /* 모바일 브라우저 주소창 높이 변화 대응 */
+            /* [핵심 2] 모바일 높이 대응 (주소창 포함) */
             min-height: 100vh; 
             min-height: 100dvh;
             
-            /* 배경 그라디언트 설정 */
+            /* [핵심 3] 배경 설정 수정 (문제의 원인 해결) */
+            /* 1. 배경 그라디언트 */
             background: linear-gradient(180deg, rgba(255, 225, 115, 0.15) 0%, #1a1a1a 25%, #000000 50%);
             
-            /* [핵심 2] 배경 반복 방지 (노란색이 바닥에 다시 나오는 것 차단) */
+            /* 2. fixed 제거 (모바일 렌더링 오류 방지) & no-repeat 추가 (하단 반복 방지) */
             background-repeat: no-repeat;
-            
-            /* 주의: background-attachment: fixed; 는 삭제된 상태 유지 */
+            background-color: #000000; /* 그라디언트가 끝나면 검은색으로 채움 */
             
             margin: 0 auto; 
             position: relative; 
