@@ -231,7 +231,7 @@ export default async function handler(req) {
             candidates = shuffledDB.slice(0, 5).map(s => ({ id: s.id, reason: isKorean ? "행운을 빕니다! 허허" : "Good luck! Huh-Huh" }));
         }
 
-        // 2. 랜덤 선택
+        // 2. 랜덤 선택 (5개 중 1개)
         const finalPickIndex = Math.floor(Math.random() * candidates.length);
         const aiSelection = candidates[finalPickIndex] || candidates[0];
 
@@ -241,23 +241,22 @@ export default async function handler(req) {
             selectedSong = shuffledDB[0]; 
         }
 
-        // 4. [수정됨] 이유 텍스트 후처리 (중복 방지 완벽 대응)
+        // 4. 이유 텍스트 후처리 (허허 중복 및 마침표 문제 완벽 해결)
         let reasonText = aiSelection.reason || (isKorean ? "새해 복 많이 받으세요." : "Happy New Year.");
         
-        // (1) 기존 문장 끝의 구두점(. ! ?)과 공백을 일단 다 지움
+        // (1) 일단 끝부분의 구두점과 공백을 싹 지웁니다.
         reasonText = reasonText.replace(/[.!?\s]+$/, "");
 
-        // (2) 혹시 프롬프트 때문에 이미 "허허"나 "Huh-Huh"가 붙어있다면 그것도 지움
+        // (2) 이미 GPT가 '허허'를 붙였는지 확인하고, 붙였다면 일단 제거합니다.
         const targetCleanSuffix = isKorean ? "허허" : "Huh-Huh";
         if (reasonText.endsWith(targetCleanSuffix)) {
              reasonText = reasonText.slice(0, -targetCleanSuffix.length).trim();
-             // 지우고 나서 또 구두점이 남았을 수 있으니 한 번 더 제거
+             // 제거 후 남은 구두점도 다시 한번 정리
              reasonText = reasonText.replace(/[.!?\s]+$/, "");
         }
 
-        // (3) 이제 깨끗해진 문장 뒤에 딱 한 번만 붙임
+        // (3) 깨끗해진 문장 뒤에 딱 한 번만 Suffix를 붙입니다.
         reasonText = reasonText + endingSuffix;
-
 
         let result = {
             title: selectedSong.title,
@@ -266,47 +265,53 @@ export default async function handler(req) {
             img_url: "record.png" 
         };
 
-        // ★★★ [이미지 검색] ★★★
-        try {
-            const fetchWithTimeout = (url, ms) => {
-                const controller = new AbortController();
-                const promise = fetch(url, { signal: controller.signal });
-                const timeout = setTimeout(() => controller.abort(), ms);
-                return promise.finally(() => clearTimeout(timeout));
-            };
+        // ★★★ [특정 노래(1조) 이미지 강제 할당] ★★★
+        // 이찬혁의 1조 (ID: 9)가 선택되면, 업로드하신 이미지를 바로 사용합니다.
+        if (selectedSong.id === 9) {
+            result.img_url = "1trillion.jpg"; 
+        } else {
+            // 그 외의 노래는 기존대로 Deezer 검색 수행
+            try {
+                const fetchWithTimeout = (url, ms) => {
+                    const controller = new AbortController();
+                    const promise = fetch(url, { signal: controller.signal });
+                    const timeout = setTimeout(() => controller.abort(), ms);
+                    return promise.finally(() => clearTimeout(timeout));
+                };
 
-            const cleanArtist = cleanText(selectedSong.artist);
-            const cleanTitle = cleanText(selectedSong.title); 
+                const cleanArtist = cleanText(selectedSong.artist);
+                const cleanTitle = cleanText(selectedSong.title); 
 
-            const query1 = `artist:"${cleanArtist}" track:"${cleanTitle}"`;
-            let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query1)}`, 5000);
-            
-            let foundImage = false;
-
-            if (searchRes.ok) {
-                let searchData = await searchRes.json();
-                if (searchData.data && searchData.data.length > 0) {
-                     const item = searchData.data[0];
-                     result.img_url = item.album.cover_xl || item.album.cover_big || item.album.cover_medium;
-                     foundImage = true;
-                }
-            }
-
-            if (!foundImage) {
-                const query2 = `${cleanArtist} ${cleanTitle}`;
-                let looseRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query2)}`, 5000);
+                const query1 = `artist:"${cleanArtist}" track:"${cleanTitle}"`;
+                let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query1)}`, 5000);
                 
-                if (looseRes.ok) {
-                    let looseData = await looseRes.json();
-                    if (looseData.data && looseData.data.length > 0) {
-                        const item = looseData.data[0];
+                let foundImage = false;
+
+                if (searchRes.ok) {
+                    let searchData = await searchRes.json();
+                    if (searchData.data && searchData.data.length > 0) {
+                        const item = searchData.data[0];
                         result.img_url = item.album.cover_xl || item.album.cover_big || item.album.cover_medium;
+                        foundImage = true;
                     }
                 }
-            }
 
-        } catch (e) { 
-            console.log("Image search failed:", e);
+                if (!foundImage) {
+                    const query2 = `${cleanArtist} ${cleanTitle}`;
+                    let looseRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query2)}`, 5000);
+                    
+                    if (looseRes.ok) {
+                        let looseData = await looseRes.json();
+                        if (looseData.data && looseData.data.length > 0) {
+                            const item = looseData.data[0];
+                            result.img_url = item.album.cover_xl || item.album.cover_big || item.album.cover_medium;
+                        }
+                    }
+                }
+
+            } catch (e) { 
+                console.log("Image search failed:", e);
+            }
         }
 
         return new Response(JSON.stringify({
