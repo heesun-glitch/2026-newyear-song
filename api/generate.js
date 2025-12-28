@@ -244,7 +244,10 @@ export default async function handler(req) {
             ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
             : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
 
-        // ★★★ [핵심 수정] 평화 = Imagine 고착화 방지 및 다양성 확보 프롬프트 ★★★
+        // ★★★ [최종 해결책] "후보 10개 뽑기" 전략 ★★★
+        // "3개"만 뽑으라고 하면 AI가 가장 완벽한(뻔한) 3개만 가져옵니다.
+        // "10개"를 뽑으라고 하면 AI는 어쩔 수 없이 4등, 5등... 10등까지 찾아야 합니다.
+        // 그 10개 중에서 코드가 무작위로 하나를 찍으면, 뻔한 1등 곡이 나올 확률은 10%로 줄어듭니다.
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -256,27 +259,26 @@ export default async function handler(req) {
         ${dbString}
 
         [Mission]
-        Analyze the user's wish and keyword, and select ONE song from the [Song Database] that matches the mood well.
+        Analyze the user's wish and keyword, and select **8 to 10 candidates** from the [Song Database] that match the mood.
         
-        [Search Strategy - IMPORTANT]
-        To ensure variety, broaden the interpretation of the keyword:
-        - If Keyword is 'Peace' (평화) -> Look for tags: 'Healing' (힐링), 'Rest' (휴식), 'Nature' (자연), 'Comfort' (위로), 'Calm' (잔잔함). (Do NOT only pick 'Imagine')
-        - If Keyword is 'Money' (돈) -> Look for tags: 'Success', 'Dream', 'Passion', 'Work'.
-        - If Keyword is 'Love' (사랑) -> Look for tags: 'Excitement', 'Destiny', 'Warmth'.
-
         [Important Rules]
         1. YOU MUST PICK FROM THE DATABASE provided above.
-        2. **DIVERSITY IS KEY**: Do not pick the same "cliché" song (like 'Imagine' for Peace) repeatedly. 
-        3. If multiple songs fit the expanded tags, choose one randomly.
+        2. **DIVERSITY IS CRITICAL**: Include not just the "perfect matches" (Top 1-3) but also "loosely related" or "mood-matching" songs (Top 4-10).
+        3. Do not limit yourself to exact tag matches. Look for the general vibe.
         ${langInstruction}
-        5. Output ONLY JSON format.
+        5. Output ONLY JSON format with a 'candidates' array containing at least 8 songs.
         
         [Output Format]
-        { 
-            "id": (number), 
-            "title": "(Song title in target language)",
-            "artist": "(Artist name in target language)",
-            "reason": "(Reason in target language, max 2 sentences)" 
+        {
+            "candidates": [
+                { 
+                    "id": (number), 
+                    "title": "(Song title)",
+                    "artist": "(Artist name)",
+                    "reason": "(Reason for this song, max 2 sentences)" 
+                },
+                ... (at least 8 items)
+            ]
         }
         `;
 
@@ -289,7 +291,7 @@ export default async function handler(req) {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [{ role: "user", content: finalPrompt }],
-                temperature: 0.85, 
+                temperature: 1.0, // [수정] 온도를 1.0(최대)으로 올려서 AI가 더 다양한 시도를 하도록 유도
                 response_format: { type: "json_object" }
             })
         });
@@ -298,12 +300,24 @@ export default async function handler(req) {
         
         let aiSelection;
         try {
-            aiSelection = JSON.parse(data.choices[0].message.content);
+            const parsedData = JSON.parse(data.choices[0].message.content);
+            const candidates = parsedData.candidates;
+            
+            // ★★★ [랜덤 선택] AI가 가져온 8~10개의 후보 중 하나를 무작위로 선택 ★★★
+            // 이렇게 하면 'Imagine'이 후보에 있더라도 선택될 확률은 10% 내외가 됩니다.
+            if (candidates && candidates.length > 0) {
+                const randomIndex = Math.floor(Math.random() * candidates.length);
+                aiSelection = candidates[randomIndex];
+            } else {
+                throw new Error("No candidates found");
+            }
         } catch (e) {
+            // 에러 시 전체 DB에서 랜덤
             const randomId = Math.floor(Math.random() * SONG_DATABASE.length) + 1;
             aiSelection = { id: randomId, reason: isKorean ? "행운이 가득하시길!" : "Good luck!" };
         }
 
+        // DB에서 원본 데이터 찾기
         let selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
         if (!selectedSong) {
             selectedSong = SONG_DATABASE[0];
@@ -315,7 +329,7 @@ export default async function handler(req) {
         let result = {
             title: aiSelection.title || selectedSong.title,
             artist: aiSelection.artist || selectedSong.artist,
-            reason: aiSelection.reason + endingSuffix, 
+            reason: (aiSelection.reason || (isKorean ? "행운을 빕니다!" : "Good luck!")) + endingSuffix, 
             img_url: "record.png" 
         };
 
