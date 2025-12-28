@@ -152,19 +152,19 @@ export default async function handler(req) {
     }
 
     try {
-        const { keyword, wish, isKorean } = await req.json(); 
+        const { keyword, wish, isKorean } = await req.json();
         const apiKey = process.env.OPENAI_API_KEY;
 
         if (!apiKey) {
             return new Response(JSON.stringify({ error: "API Key not configured" }), { status: 500 });
         }
 
-        const mappedKeyword = KEYWORD_MAP[keyword] || "평화"; 
+        const mappedKeyword = KEYWORD_MAP[keyword] || "평화";
         const targetCategoryList = SONG_CATEGORIES[mappedKeyword] || SONG_CATEGORIES["평화"];
         const shuffledDB = shuffleArray(targetCategoryList);
-        
+
         const dbString = JSON.stringify(shuffledDB.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
-        
+
         const endingSuffix = isKorean ? " 허허" : " Huh-Huh";
         const langInstruction = isKorean
             ? `3. Language: 'reason' MUST be in **Korean**. Do NOT use formal endings like '~요소이다'. Use a warm, friendly tone. END THE SENTENCE WITH "${endingSuffix}".`
@@ -211,13 +211,13 @@ export default async function handler(req) {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [{ role: "user", content: finalPrompt }],
-                temperature: 0.8, 
+                temperature: 0.8,
                 response_format: { type: "json_object" }
             })
         });
 
         const data = await response.json();
-        
+
         // 1. GPT 결과 파싱
         let candidates = [];
         try {
@@ -238,7 +238,7 @@ export default async function handler(req) {
         // 3. 노래 정보 찾기
         let selectedSong = targetCategoryList.find(s => s.id === aiSelection.id);
         if (!selectedSong) {
-            selectedSong = shuffledDB[0]; 
+            selectedSong = shuffledDB[0];
         }
 
         // 4. 이유 텍스트 후처리 (허허 중복 및 마침표 문제 완벽 해결)
@@ -261,14 +261,17 @@ export default async function handler(req) {
         let result = {
             title: selectedSong.title,
             artist: selectedSong.artist,
-            reason: reasonText, 
-            img_url: "record.png" 
+            reason: reasonText,
+            img_url: "record.png" // 기본 이미지
         };
 
-        // ★★★ [특정 노래(1조) 이미지 강제 할당] ★★★
-        // 이찬혁의 1조 (ID: 9)가 선택되면, 업로드하신 이미지를 바로 사용합니다.
+        // ★★★ [특정 노래(1조, 이루리) 이미지 강제 할당] ★★★
+        // 이찬혁의 1조 (ID: 9)가 선택되면, 1조 이미지를 사용합니다.
         if (selectedSong.id === 9) {
             result.img_url = "1trillion.jpg"; 
+        // 우주소녀의 이루리 (ID: 10)가 선택되면, 첨부하신 'as_you_wish.jpg'를 사용합니다.
+        } else if (selectedSong.id === 10) {
+            result.img_url = "as_you_wish.jpg"; 
         } else {
             // 그 외의 노래는 기존대로 Deezer 검색 수행
             try {
@@ -280,7 +283,7 @@ export default async function handler(req) {
                 };
 
                 const cleanArtist = cleanText(selectedSong.artist);
-                const cleanTitle = cleanText(selectedSong.title); 
+                const cleanTitle = cleanText(selectedSong.title);
 
                 const query1 = `artist:"${cleanArtist}" track:"${cleanTitle}"`;
                 let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query1)}`, 5000);
@@ -309,7 +312,7 @@ export default async function handler(req) {
                     }
                 }
 
-            } catch (e) { 
+            } catch (e) {
                 console.log("Image search failed:", e);
             }
         }
