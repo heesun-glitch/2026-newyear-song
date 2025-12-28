@@ -244,7 +244,7 @@ export default async function handler(req) {
             ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
             : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
 
-        // ★★★ [수정] 후보군 7개 선정 + 원래 데이터 포맷 유지 ★★★
+        // ★★★ [수정] 후보군 5개 선정 + 원래 데이터 포맷 유지 ★★★
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -256,11 +256,11 @@ export default async function handler(req) {
         ${dbString}
 
         [Mission]
-        Analyze the user's wish and keyword, and select **7 candidates** from the [Song Database] that match the mood.
+        Analyze the user's wish and keyword, and select **5 candidates** from the [Song Database] that match the mood.
         
         [Important Rules]
         1. YOU MUST PICK FROM THE DATABASE provided above.
-        2. **DIVERSITY IS CRITICAL**: Include not just the "perfect matches" (Top 1-3) but also "loosely related" or "mood-matching" songs (Top 4-7).
+        2. **DIVERSITY IS CRITICAL**: Include not just the "perfect matches" (Top 1) but also "loosely related" or "mood-matching" songs (Top 2-5).
         3. Do not limit yourself to exact tag matches. Look for the general vibe.
         ${langInstruction}
         5. Output ONLY JSON format with a 'candidates' array.
@@ -274,7 +274,7 @@ export default async function handler(req) {
                     "artist": "(Artist name)",
                     "reason": "(Reason for this song, max 2 sentences)" 
                 },
-                ... (total 7 items)
+                ... (total 5 items)
             ]
         }
         `;
@@ -300,7 +300,7 @@ export default async function handler(req) {
             const parsedData = JSON.parse(data.choices[0].message.content);
             const candidates = parsedData.candidates;
             
-            // ★★★ [랜덤 선택] 7개 후보 중 하나를 무작위로 선택 ★★★
+            // ★★★ [랜덤 선택] 5개 후보 중 하나를 무작위로 선택 ★★★
             if (candidates && candidates.length > 0) {
                 const randomIndex = Math.floor(Math.random() * candidates.length);
                 aiSelection = candidates[randomIndex];
