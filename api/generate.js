@@ -14,7 +14,7 @@ function shuffleArray(array) {
 
 // ★★★ 최종 통합 데이터베이스 (총 205곡) ★★★
 const SONG_DATABASE = [
-    // ... (기존 데이터베이스 리스트 그대로 유지) ...
+    // ... (기존 데이터베이스 205개 그대로 유지하세요) ...
     { id: 1, title: "Welcome to the Show", artist: "DAY6 (데이식스)", tags: "시작, 무대, 주인공, 벅참, 환영" },
     { id: 2, title: "Live My Life", artist: "aespa", tags: "자유, 나만의 길, 여행, 팝펑크, 욜로" },
     // ... 중간 생략 ...
@@ -34,19 +34,18 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: "API Key not configured" }), { status: 500 });
         }
 
-        // [1단계: 데이터 다이어트] 205개 중 랜덤으로 40개만 뽑아서 AI에게 던져줍니다.
-        // 이렇게 하면 매번 후보군 풀이 달라져서 결과가 고착화되는 것을 막습니다.
+        // [수정 1] 데이터를 자르지 않고 '전체'를 다 쓰되, 순서만 섞습니다.
+        // 이렇게 하면 소원과 맞는 노래가 절대 누락되지 않습니다.
         const shuffledDB = shuffleArray(SONG_DATABASE);
-        const candidatePool = shuffledDB.slice(0, 40); 
         
-        const dbString = JSON.stringify(candidatePool.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
+        // 전체 데이터를 문자열로 변환 (입력 토큰은 GPT-4o-mini에서 충분히 처리 가능)
+        const dbString = JSON.stringify(shuffledDB.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
         
         const langInstruction = isKorean
             ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
             : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
 
-        // [2단계: 내부 경선 및 랜덤 선택] 
-        // 프롬프트 핵심 변경: "Top 5를 뽑은 뒤, 그 중에서 반드시 'Random'하게 1개를 골라라"
+        // [수정 2] 프롬프트: 전체 리스트에서 후보 5개를 찾고, 그 중 1개를 랜덤 선택
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -54,18 +53,18 @@ export default async function handler(req) {
         - Keyword: "${keyword}"
         - Wish: "${wish}"
 
-        [Candidate Pool (Random subset of DB)]
+        [Song Database]
         ${dbString}
 
         [Mission]
-        1. First, analyze the pool and identify the **Top 5 candidates** that match the mood/keyword nicely.
-        2. **CRITICAL STEP**: From those Top 5 candidates, **RANDOMLY PICK ONE (1) FINAL SONG**. 
-           (Do not just pick the "best" match. Treat all 5 as equal and roll a dice to pick one.)
+        1. Scan the ENTIRE [Song Database] and identify the **Top 5 candidates** that best match the user's wish and keyword.
+        2. **CRITICAL**: From those Top 5 candidates, **RANDOMLY PICK ONE (1) FINAL SONG**. 
+           (Do not always pick the #1 best match. Roll a dice among the top 5 to ensure variety.)
         3. Provide the JSON output for **ONLY that 1 Final Song**.
         
         [Important Rules]
         1. YOU MUST PICK FROM THE DATABASE provided above.
-        2. The selection must be random among the top candidates to ensure diversity.
+        2. Connection between the wish and the song MUST be logical.
         ${langInstruction}
         4. Output ONLY JSON format with a single object.
         
@@ -85,9 +84,9 @@ export default async function handler(req) {
                 "Authorization": `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini", // 속도가 가장 빠른 모델 권장
+                model: "gpt-4o-mini",
                 messages: [{ role: "user", content: finalPrompt }],
-                temperature: 1.1, // 온도를 1.1로 조금 더 높여서 랜덤성을 강화했습니다.
+                temperature: 1.0, 
                 response_format: { type: "json_object" }
             })
         });
@@ -96,27 +95,22 @@ export default async function handler(req) {
         
         let aiSelection;
         try {
-            // AI가 1개만 주므로 바로 파싱
             const content = JSON.parse(data.choices[0].message.content);
-            
-            // 혹시 배열로 줬을 경우를 대비한 방어 코드
             if (content.candidates) {
                 aiSelection = content.candidates[Math.floor(Math.random() * content.candidates.length)];
             } else {
                 aiSelection = content;
             }
-
         } catch (e) {
-            // 에러 시 풀에서 랜덤 선택
-            aiSelection = candidatePool[Math.floor(Math.random() * candidatePool.length)];
+            // 에러 발생 시 전체 DB에서 랜덤 선택 (안전장치)
+            aiSelection = shuffledDB[Math.floor(Math.random() * shuffledDB.length)];
             aiSelection.reason = isKorean ? "행운이 가득하시길!" : "Good luck!";
         }
 
         // DB에서 원본 데이터 찾기
         let selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
         if (!selectedSong) {
-             // ID 매칭 실패 시 제목으로 찾거나 풀에서 첫번째 선택
-            selectedSong = SONG_DATABASE.find(s => s.title === aiSelection.title) || candidatePool[0];
+            selectedSong = SONG_DATABASE.find(s => s.title === aiSelection.title) || SONG_DATABASE[0];
         }
 
         // [말버릇 강제 추가]
@@ -135,7 +129,7 @@ export default async function handler(req) {
             img_url: "record.png" 
         };
 
-        // [이미지 검색] 1.5초 타임아웃 (속도 최적화)
+        // [수정 3] 이미지 검색 타임아웃을 3500ms(3.5초)로 넉넉하게 연장
         try {
             const fetchWithTimeout = (url, ms) => {
                 const controller = new AbortController();
@@ -145,17 +139,26 @@ export default async function handler(req) {
             };
 
             const query = `artist:"${selectedSong.artist}" track:"${selectedSong.title}"`;
-            let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`, 1500);
+            // 3500ms로 변경하여 이미지를 불러올 시간을 충분히 줌
+            let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`, 3500);
             
             if (searchRes.ok) {
                 let searchData = await searchRes.json();
                 if (searchData.data && searchData.data.length > 0) {
                     result.img_url = searchData.data[0].album.cover_xl;
+                } else {
+                     // 정확한 매칭 실패 시, 제목만으로 느슨한 검색 시도
+                    let looseRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(selectedSong.title)}`, 3500);
+                     if (looseRes.ok) {
+                        let looseData = await looseRes.json();
+                        if (looseData.data && looseData.data.length > 0) {
+                             result.img_url = looseData.data[0].album.cover_xl;
+                        }
+                     }
                 }
             }
         } catch (e) { 
-            // 타임아웃 되거나 에러나면 기본 이미지 사용 (사용자 경험 보호)
-            console.log("Image search skipped or failed");
+            console.log("Image search timed out or failed:", e);
         }
 
         return new Response(JSON.stringify({
