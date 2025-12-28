@@ -2,7 +2,7 @@ export const config = {
     runtime: 'edge',
 };
 
-// [추가된 함수] 배열을 무작위로 섞어주는 함수 (피셔-예이츠 셔플 알고리즘)
+// [함수] 배열을 무작위로 섞어주는 함수
 function shuffleArray(array) {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -236,17 +236,14 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: "API Key not configured" }), { status: 500 });
         }
 
-        // [수정: 데이터 셔플] 매 요청마다 DB 순서를 섞어서 AI에게 제공
         const shuffledDB = shuffleArray(SONG_DATABASE);
         
-        // 데이터가 많으므로 토큰 절약을 위해 필요한 필드만 보냅니다.
         const dbString = JSON.stringify(shuffledDB.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
         
         const langInstruction = isKorean
             ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
             : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
 
-        // [수정: 프롬프트] 랜덤성 강조 및 뻔한 선택 지양 규칙 추가
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -285,7 +282,7 @@ export default async function handler(req) {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [{ role: "user", content: finalPrompt }],
-                temperature: 0.85, // [수정: 온도 상향] 다양성을 위해 0.7 -> 0.85로 변경
+                temperature: 0.85, 
                 response_format: { type: "json_object" }
             })
         });
@@ -296,21 +293,22 @@ export default async function handler(req) {
         try {
             aiSelection = JSON.parse(data.choices[0].message.content);
         } catch (e) {
-            // 에러 시, 전체 DB 범위 내에서 완전 랜덤 선택
             const randomId = Math.floor(Math.random() * SONG_DATABASE.length) + 1;
             aiSelection = { id: randomId, reason: isKorean ? "행운이 가득하시길!" : "Good luck!" };
         }
 
-        // DB에서 원본 데이터 찾기 (SONG_DATABASE 원본에서 id로 검색)
         let selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
         if (!selectedSong) {
             selectedSong = SONG_DATABASE[0];
         }
 
+        // [수정 포인트] 무조건 말버릇(" 허허" / " Huh-Huh") 강제 추가
+        const endingSuffix = isKorean ? " 허허" : " Huh-Huh";
+
         let result = {
             title: aiSelection.title || selectedSong.title,
             artist: aiSelection.artist || selectedSong.artist,
-            reason: aiSelection.reason,
+            reason: aiSelection.reason + endingSuffix, // <--- 여기서 강제로 붙임
             img_url: "record.png" 
         };
 
@@ -323,7 +321,6 @@ export default async function handler(req) {
             if (searchData.data && searchData.data.length > 0) {
                 result.img_url = searchData.data[0].album.cover_xl;
             } else {
-                // 1차 검색 실패 시 느슨한 검색 시도
                 let looseRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(selectedSong.artist + " " + selectedSong.title)}`);
                 let looseData = await looseRes.json();
                 if (looseData.data && looseData.data.length > 0) {
