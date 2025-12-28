@@ -12,13 +12,13 @@ function shuffleArray(array) {
     return newArray;
 }
 
-// [함수] 가수 이름 정제 (예: "DAY6 (데이식스)" -> "DAY6")
-// 검색 정확도를 높이기 위해 괄호 뒷부분을 제거합니다.
-function cleanArtistName(rawName) {
-    return rawName.split('(')[0].trim();
+// [함수] 텍스트 정제 (괄호 안의 내용 제거)
+// 예: "DAY6 (데이식스)" -> "DAY6", "I (Feat. 버벌진트)" -> "I"
+function cleanText(text) {
+    return text.split('(')[0].trim();
 }
 
-// ★★★ 최종 통합 데이터베이스 (총 205곡 - 전체 복구 완료) ★★★
+// ★★★ 최종 통합 데이터베이스 (총 205곡) ★★★
 const SONG_DATABASE = [
     // [SECTION 1: 유튜브 새해 국룰 리스트]
     { id: 1, title: "Welcome to the Show", artist: "DAY6 (데이식스)", tags: "시작, 무대, 주인공, 벅참, 환영" },
@@ -242,17 +242,14 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: "API Key not configured" }), { status: 500 });
         }
 
-        // 1. 전체 데이터 섞기 (누락 없음)
         const shuffledDB = shuffleArray(SONG_DATABASE);
         
-        // 2. 전체 DB를 문자열로 변환하여 AI에게 전달
         const dbString = JSON.stringify(shuffledDB.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
         
         const langInstruction = isKorean
             ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
             : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
 
-        // 3. AI 프롬프트 (5개 후보 선정 -> 1개 랜덤 픽)
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -313,13 +310,11 @@ export default async function handler(req) {
             aiSelection.reason = isKorean ? "행운이 가득하시길!" : "Good luck!";
         }
 
-        // DB에서 원본 데이터 찾기
         let selectedSong = SONG_DATABASE.find(s => s.id === aiSelection.id);
         if (!selectedSong) {
             selectedSong = SONG_DATABASE.find(s => s.title === aiSelection.title) || SONG_DATABASE[0];
         }
 
-        // [말버릇 강제 추가]
         const endingSuffix = isKorean ? " 허허" : " Huh-Huh";
         let reasonText = aiSelection.reason || (isKorean ? "새해 복 많이 받으세요." : "Happy New Year.");
         
@@ -335,9 +330,8 @@ export default async function handler(req) {
             img_url: "record.png" 
         };
 
-        // ★★★ [이미지 검색 로직 전면 수정] ★★★
+        // ★★★ [업그레이드된 이미지 검색 로직] ★★★
         try {
-            // 타임아웃 4초 설정
             const fetchWithTimeout = (url, ms) => {
                 const controller = new AbortController();
                 const promise = fetch(url, { signal: controller.signal });
@@ -345,41 +339,54 @@ export default async function handler(req) {
                 return promise.finally(() => clearTimeout(timeout));
             };
 
-            // 1. 가수 이름 정제 (DAY6 (데이식스) -> DAY6)
-            const cleanArtist = cleanArtistName(selectedSong.artist);
+            const cleanArtist = cleanText(selectedSong.artist);
+            const cleanTitle = cleanText(selectedSong.title); // 제목도 괄호 제거
+
+            // 1단계: 정밀 검색 (artist & track)
+            const query1 = `artist:"${cleanArtist}" track:"${cleanTitle}"`;
+            let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query1)}`, 4000);
             
-            // 2. 쿼리 생성 (artist:"..." track:"..." 문법 사용)
-            // encodeURIComponent를 사용하여 특수문자 처리
-            const query = `artist:"${cleanArtist}" track:"${selectedSong.title}"`;
-            
-            // 3. Deezer API 호출 (4000ms)
-            let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query)}`, 4000);
-            
+            let foundImage = false;
+
             if (searchRes.ok) {
                 let searchData = await searchRes.json();
-                
-                // 4. [검증 단계] 검색 결과가 유효한지 확인
-                // 결과가 있고, 결과의 아티스트 이름이 우리가 찾는 아티스트와 비슷해야 함
                 if (searchData.data && searchData.data.length > 0) {
-                    
-                    // 첫 번째 결과가 무조건 맞는게 아님. 리스트를 순회하며 아티스트 매칭 확인
+                     // 아티스트 검증
                     const validMatch = searchData.data.find(track => {
-                        const resultArtist = track.artist.name.toLowerCase().replace(/\s/g, '');
-                        const targetArtist = cleanArtist.toLowerCase().replace(/\s/g, '');
-                        // DAY6 vs Day6, 또는 DAY6 vs DAY6 (Even of Day) 등 유연하게 매칭
-                        return resultArtist.includes(targetArtist) || targetArtist.includes(resultArtist);
+                        const rArtist = track.artist.name.toLowerCase().replace(/\s/g, '');
+                        const tArtist = cleanArtist.toLowerCase().replace(/\s/g, '');
+                        return rArtist.includes(tArtist) || tArtist.includes(rArtist);
                     });
-
                     if (validMatch) {
                         result.img_url = validMatch.album.cover_xl;
-                    } else {
-                        console.log(`Mismatch: Found ${searchData.data[0].artist.name} but wanted ${cleanArtist}`);
-                        // 매칭되는 게 없으면 그냥 기본 이미지 사용 (잘못된 이미지 보여주느니 기본이 나음)
+                        foundImage = true;
                     }
                 }
             }
+
+            // 2단계: 실패 시 통검색 (가수 + 제목) - Fallback
+            if (!foundImage) {
+                const query2 = `${cleanArtist} ${cleanTitle}`;
+                let looseRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query2)}`, 4000);
+                
+                if (looseRes.ok) {
+                    let looseData = await looseRes.json();
+                    if (looseData.data && looseData.data.length > 0) {
+                         // 여기서도 아티스트 검증 (동명이곡 방지)
+                         const validMatch = looseData.data.find(track => {
+                            const rArtist = track.artist.name.toLowerCase().replace(/\s/g, '');
+                            const tArtist = cleanArtist.toLowerCase().replace(/\s/g, '');
+                            return rArtist.includes(tArtist) || tArtist.includes(rArtist);
+                        });
+                        if (validMatch) {
+                            result.img_url = validMatch.album.cover_xl;
+                        }
+                    }
+                }
+            }
+
         } catch (e) { 
-            console.log("Image search failed or timed out:", e);
+            console.log("Image search failed:", e);
         }
 
         return new Response(JSON.stringify({
