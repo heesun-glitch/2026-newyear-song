@@ -244,6 +244,7 @@ export default async function handler(req) {
             ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
             : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
 
+        // ★★★ [핵심 수정] 평화 = Imagine 고착화 방지 및 다양성 확보 프롬프트 ★★★
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -257,10 +258,16 @@ export default async function handler(req) {
         [Mission]
         Analyze the user's wish and keyword, and select ONE song from the [Song Database] that matches the mood well.
         
+        [Search Strategy - IMPORTANT]
+        To ensure variety, broaden the interpretation of the keyword:
+        - If Keyword is 'Peace' (평화) -> Look for tags: 'Healing' (힐링), 'Rest' (휴식), 'Nature' (자연), 'Comfort' (위로), 'Calm' (잔잔함). (Do NOT only pick 'Imagine')
+        - If Keyword is 'Money' (돈) -> Look for tags: 'Success', 'Dream', 'Passion', 'Work'.
+        - If Keyword is 'Love' (사랑) -> Look for tags: 'Excitement', 'Destiny', 'Warmth'.
+
         [Important Rules]
         1. YOU MUST PICK FROM THE DATABASE provided above.
-        2. Do not always pick the most obvious choice. Consider the specific nuance of the tags.
-        3. If multiple songs have similar tags, pick one randomly among them to ensure variety.
+        2. **DIVERSITY IS KEY**: Do not pick the same "cliché" song (like 'Imagine' for Peace) repeatedly. 
+        3. If multiple songs fit the expanded tags, choose one randomly.
         ${langInstruction}
         5. Output ONLY JSON format.
         
@@ -302,13 +309,13 @@ export default async function handler(req) {
             selectedSong = SONG_DATABASE[0];
         }
 
-        // [수정 포인트] 무조건 말버릇(" 허허" / " Huh-Huh") 강제 추가
+        // [말버릇 강제 추가]
         const endingSuffix = isKorean ? " 허허" : " Huh-Huh";
 
         let result = {
             title: aiSelection.title || selectedSong.title,
             artist: aiSelection.artist || selectedSong.artist,
-            reason: aiSelection.reason + endingSuffix, // <--- 여기서 강제로 붙임
+            reason: aiSelection.reason + endingSuffix, 
             img_url: "record.png" 
         };
 
