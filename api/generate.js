@@ -19,7 +19,6 @@ function cleanText(text) {
 }
 
 // ★★★ [카테고리별 데이터베이스 분리] ★★★
-// 유저가 선택한 키워드에 따라 이 리스트 중 하나만 사용합니다.
 const SONG_CATEGORIES = {
     "돈": [ // Wealth, Money, Success
         { id: 9, title: "1조", artist: "이찬혁 (AKMU)", tags: "돈, 대박" },
@@ -137,14 +136,14 @@ const SONG_CATEGORIES = {
     ]
 };
 
-// 키워드 매핑 (한글/영어 대응)
+// 키워드 매핑
 const KEYWORD_MAP = {
     "돈": "돈", "Money": "돈",
     "사랑": "사랑", "Love": "사랑",
     "건강": "건강", "Health": "건강",
     "커리어": "커리어", "Career": "커리어",
     "평화": "평화", "Peace": "평화",
-    "이동": "이동", "Travel": "이동" // '이동' 키워드 추가
+    "이동": "이동", "Travel": "이동"
 };
 
 export default async function handler(req) {
@@ -160,17 +159,12 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: "API Key not configured" }), { status: 500 });
         }
 
-        // 1. 유저 키워드에 맞는 노래 리스트만 가져오기 (핵심 수정)
-        const mappedKeyword = KEYWORD_MAP[keyword] || "평화"; // 기본값 평화
+        const mappedKeyword = KEYWORD_MAP[keyword] || "평화"; 
         const targetCategoryList = SONG_CATEGORIES[mappedKeyword] || SONG_CATEGORIES["평화"];
-        
-        // 2. 해당 리스트 섞기
         const shuffledDB = shuffleArray(targetCategoryList);
         
-        // 데이터베이스를 문자열로 변환 (ID, 제목, 아티스트, 태그만 포함)
         const dbString = JSON.stringify(shuffledDB.map(s => ({ id: s.id, title: s.title, artist: s.artist, tags: s.tags })));
         
-        // 언어 설정 및 말투 지침 (Ending Suffix 강제)
         const endingSuffix = isKorean ? " 허허" : " Huh-Huh";
         const langInstruction = isKorean
             ? `3. Language: 'reason' MUST be in **Korean**. Do NOT use formal endings like '~요소이다'. Use a warm, friendly tone. END THE SENTENCE WITH "${endingSuffix}".`
@@ -224,7 +218,7 @@ export default async function handler(req) {
 
         const data = await response.json();
         
-        // 1. GPT 결과 파싱 (후보 5개 확보)
+        // 1. GPT 결과 파싱
         let candidates = [];
         try {
             const content = JSON.parse(data.choices[0].message.content);
@@ -234,26 +228,36 @@ export default async function handler(req) {
                 candidates = [content];
             }
         } catch (e) {
-            // 에러 시 현재 카테고리에서 랜덤 5개
             candidates = shuffledDB.slice(0, 5).map(s => ({ id: s.id, reason: isKorean ? "행운을 빕니다! 허허" : "Good luck! Huh-Huh" }));
         }
 
-        // 2. [핵심 로직] 후보 5개 중 '랜덤'으로 1개 최종 선택 (JS Random)
+        // 2. 랜덤 선택
         const finalPickIndex = Math.floor(Math.random() * candidates.length);
         const aiSelection = candidates[finalPickIndex] || candidates[0];
 
-        // 3. 최종 선택된 노래의 상세 정보 찾기 (전체 DB가 아니라 카테고리 DB에서 찾음)
+        // 3. 노래 정보 찾기
         let selectedSong = targetCategoryList.find(s => s.id === aiSelection.id);
         if (!selectedSong) {
             selectedSong = shuffledDB[0]; 
         }
 
-        // 4. 이유 텍스트 후처리 (허허/Huh-Huh 강제 적용)
+        // 4. [수정됨] 이유 텍스트 후처리 (중복 방지 완벽 대응)
         let reasonText = aiSelection.reason || (isKorean ? "새해 복 많이 받으세요." : "Happy New Year.");
-        if (!reasonText.endsWith(endingSuffix.trim())) {
-             if(reasonText.endsWith('.')) reasonText = reasonText.slice(0, -1);
-             reasonText += endingSuffix;
+        
+        // (1) 기존 문장 끝의 구두점(. ! ?)과 공백을 일단 다 지움
+        reasonText = reasonText.replace(/[.!?\s]+$/, "");
+
+        // (2) 혹시 프롬프트 때문에 이미 "허허"나 "Huh-Huh"가 붙어있다면 그것도 지움
+        const targetCleanSuffix = isKorean ? "허허" : "Huh-Huh";
+        if (reasonText.endsWith(targetCleanSuffix)) {
+             reasonText = reasonText.slice(0, -targetCleanSuffix.length).trim();
+             // 지우고 나서 또 구두점이 남았을 수 있으니 한 번 더 제거
+             reasonText = reasonText.replace(/[.!?\s]+$/, "");
         }
+
+        // (3) 이제 깨끗해진 문장 뒤에 딱 한 번만 붙임
+        reasonText = reasonText + endingSuffix;
+
 
         let result = {
             title: selectedSong.title,
@@ -262,7 +266,7 @@ export default async function handler(req) {
             img_url: "record.png" 
         };
 
-        // ★★★ [이미지 검색 로직 - Deezer API] ★★★
+        // ★★★ [이미지 검색] ★★★
         try {
             const fetchWithTimeout = (url, ms) => {
                 const controller = new AbortController();
@@ -274,7 +278,6 @@ export default async function handler(req) {
             const cleanArtist = cleanText(selectedSong.artist);
             const cleanTitle = cleanText(selectedSong.title); 
 
-            // 1단계: 정밀 검색
             const query1 = `artist:"${cleanArtist}" track:"${cleanTitle}"`;
             let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query1)}`, 5000);
             
@@ -289,7 +292,6 @@ export default async function handler(req) {
                 }
             }
 
-            // 2단계: 실패 시 통검색
             if (!foundImage) {
                 const query2 = `${cleanArtist} ${cleanTitle}`;
                 let looseRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query2)}`, 5000);
