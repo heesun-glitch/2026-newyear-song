@@ -244,10 +244,7 @@ export default async function handler(req) {
             ? "3. Output Language: 'title', 'artist', 'reason' MUST be in **Korean**. (Reason should be warm and polite '해요체')"
             : "3. Output Language: 'title', 'artist', 'reason' MUST be in **English**. Translate the song title and artist to their official English names if they are in Korean.";
 
-        // ★★★ [최종 해결책] "후보 10개 뽑기" 전략 ★★★
-        // "3개"만 뽑으라고 하면 AI가 가장 완벽한(뻔한) 3개만 가져옵니다.
-        // "10개"를 뽑으라고 하면 AI는 어쩔 수 없이 4등, 5등... 10등까지 찾아야 합니다.
-        // 그 10개 중에서 코드가 무작위로 하나를 찍으면, 뻔한 1등 곡이 나올 확률은 10%로 줄어듭니다.
+        // ★★★ [수정] 후보군 7개 선정 + 원래 데이터 포맷 유지 ★★★
         const finalPrompt = `
         Role: Music Recommendation Expert.
         
@@ -259,14 +256,14 @@ export default async function handler(req) {
         ${dbString}
 
         [Mission]
-        Analyze the user's wish and keyword, and select **8 to 10 candidates** from the [Song Database] that match the mood.
+        Analyze the user's wish and keyword, and select **7 candidates** from the [Song Database] that match the mood.
         
         [Important Rules]
         1. YOU MUST PICK FROM THE DATABASE provided above.
-        2. **DIVERSITY IS CRITICAL**: Include not just the "perfect matches" (Top 1-3) but also "loosely related" or "mood-matching" songs (Top 4-10).
+        2. **DIVERSITY IS CRITICAL**: Include not just the "perfect matches" (Top 1-3) but also "loosely related" or "mood-matching" songs (Top 4-7).
         3. Do not limit yourself to exact tag matches. Look for the general vibe.
         ${langInstruction}
-        5. Output ONLY JSON format with a 'candidates' array containing at least 8 songs.
+        5. Output ONLY JSON format with a 'candidates' array.
         
         [Output Format]
         {
@@ -277,7 +274,7 @@ export default async function handler(req) {
                     "artist": "(Artist name)",
                     "reason": "(Reason for this song, max 2 sentences)" 
                 },
-                ... (at least 8 items)
+                ... (total 7 items)
             ]
         }
         `;
@@ -291,7 +288,7 @@ export default async function handler(req) {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [{ role: "user", content: finalPrompt }],
-                temperature: 1.0, // [수정] 온도를 1.0(최대)으로 올려서 AI가 더 다양한 시도를 하도록 유도
+                temperature: 1.0, // 다양성을 위해 높은 온도 유지
                 response_format: { type: "json_object" }
             })
         });
@@ -303,8 +300,7 @@ export default async function handler(req) {
             const parsedData = JSON.parse(data.choices[0].message.content);
             const candidates = parsedData.candidates;
             
-            // ★★★ [랜덤 선택] AI가 가져온 8~10개의 후보 중 하나를 무작위로 선택 ★★★
-            // 이렇게 하면 'Imagine'이 후보에 있더라도 선택될 확률은 10% 내외가 됩니다.
+            // ★★★ [랜덤 선택] 7개 후보 중 하나를 무작위로 선택 ★★★
             if (candidates && candidates.length > 0) {
                 const randomIndex = Math.floor(Math.random() * candidates.length);
                 aiSelection = candidates[randomIndex];
