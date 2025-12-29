@@ -172,7 +172,7 @@ export default async function handler(req) {
 
         const finalPrompt = `
         Role: Music Recommendation Expert.
-        
+         
         [User Data]
         - Selected Category: "${mappedKeyword}" (Only pick songs from the provided list below)
         - Specific Wish: "${wish}"
@@ -183,13 +183,13 @@ export default async function handler(req) {
         [Mission]
         1. Scan the [Available Song List] and identify the **Top 5 candidates** that best match the user's specific wish.
         2. Provide a JSON object containing these 5 candidates.
-        
+         
         [Important Rules]
         1. YOU MUST PICK FROM THE [Available Song List] provided above. Do NOT invent songs.
         2. Connection between the wish and the song MUST be logical.
         ${langInstruction}
         4. Output ONLY JSON format.
-        
+         
         [Output Format]
         {
             "candidates": [
@@ -243,7 +243,7 @@ export default async function handler(req) {
 
         // 4. 이유 텍스트 후처리 (허허 중복 및 마침표 문제 완벽 해결)
         let reasonText = aiSelection.reason || (isKorean ? "새해 복 많이 받으세요." : "Happy New Year.");
-        
+         
         // (1) 일단 끝부분의 구두점과 공백을 싹 지웁니다.
         reasonText = reasonText.replace(/[.!?\s]+$/, "");
 
@@ -272,6 +272,9 @@ export default async function handler(req) {
         // 우주소녀의 이루리 (ID: 10)가 선택되면, 첨부하신 'as_you_wish.jpg'를 사용합니다.
         } else if (selectedSong.id === 10) {
             result.img_url = "as_you_wish.jpg"; 
+        // 성시경의 너의 모든 순간 (ID: 92)이 선택되면, 설정한 이미지를 사용합니다.
+        } else if (selectedSong.id === 92) {
+            result.img_url = "every_moment.jpg"; // 여기 파일명을 실제 이미지 파일명으로 변경하세요!
         } else {
             // 그 외의 노래는 기존대로 Deezer 검색 수행
             try {
@@ -287,7 +290,7 @@ export default async function handler(req) {
 
                 const query1 = `artist:"${cleanArtist}" track:"${cleanTitle}"`;
                 let searchRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query1)}`, 5000);
-                
+                 
                 let foundImage = false;
 
                 if (searchRes.ok) {
@@ -302,7 +305,7 @@ export default async function handler(req) {
                 if (!foundImage) {
                     const query2 = `${cleanArtist} ${cleanTitle}`;
                     let looseRes = await fetchWithTimeout(`https://api.deezer.com/search?q=${encodeURIComponent(query2)}`, 5000);
-                    
+                     
                     if (looseRes.ok) {
                         let looseData = await looseRes.json();
                         if (looseData.data && looseData.data.length > 0) {
